@@ -2,6 +2,9 @@ import { BrowserWindow } from 'electron'
 import { AppEvents } from './events'
 
 export function handleDeepLink(mainWindow: BrowserWindow, url: URL): void {
+  console.log("================================")
+  console.log("handleDeepLink invoked with url:", url)
+  console.log("================================")
   switch (url.pathname) {
     case '/auth/success':
       mainWindow.webContents.send(AppEvents.AUTHENTICATION_SUCCESS, {

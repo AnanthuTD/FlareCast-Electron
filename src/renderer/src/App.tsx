@@ -1,6 +1,6 @@
 import React from 'react'
-import { UserStoreContext } from './providers/UserStoreProvider'
 import { AuthProvider } from './providers/AuthProvider'
+import { UserStoreProvider } from './providers/UserStoreProvider'
 
 const App: React.FC = () => {
   const handleSignIn = () => {
@@ -9,7 +9,7 @@ const App: React.FC = () => {
   }
 
   return (
-    <UserStoreContext>
+    <UserStoreProvider>
       <AuthProvider>
         <div style={{ textAlign: 'center', marginTop: '50px' }}>
           <button
@@ -24,7 +24,7 @@ const App: React.FC = () => {
           </button>
         </div>
       </AuthProvider>
-    </UserStoreContext>
+    </UserStoreProvider>
   )
 }
 

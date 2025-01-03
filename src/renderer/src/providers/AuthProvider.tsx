@@ -2,6 +2,7 @@ import axiosInstance from '@renderer/axios'
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useUserStore } from './UserStoreProvider'
 import { UserState } from '@renderer/stores/userStore'
+import axios from 'axios'
 
 interface AuthContextType {
   errorMessage: string | null
@@ -26,11 +27,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           which will validate the refresh token and set the new one in the cookie for further requests and send back the 
           accessToken and user data
         */
-        const res = await axiosInstance.post('/api/user/auth/post-login', {
+        const res = await axios.post('/api/user/auth/post-login', {
           refreshToken: data.refreshToken
         })
 
         if (res.data.user) {
+          console.log('User data:', res.data.user)
           setUser(res.data.user as UserState)
         }
 

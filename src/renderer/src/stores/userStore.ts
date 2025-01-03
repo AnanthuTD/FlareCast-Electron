@@ -1,24 +1,24 @@
 import { createStore } from 'zustand/vanilla'
 
 export type UserState = {
-  accessToken: string,
-  firstName: string,
-  lastName: string,
-  email: string,
-  image: string | null,
-  id: string,
+  accessToken: string
+  firstName: string
+  lastName: string
+  email: string
+  image: string | null
+  id: string
 }
 
 export type UserActions = {
-  setAccessToken: (accessToken: string) => void,
-  setFirstName: (firstName: string) => void,
-  setLastName: (lastName: string) => void,
-  setEmail: (email: string) => void,
-  setImage: (image: string) => void,
-  setId: (id: string) => void,
-  logout: () => void,
-  setUser: (user: UserState) => void,
-  clearAccessToken: () => void,
+  setAccessToken: (accessToken: string) => void
+  setFirstName: (firstName: string) => void
+  setLastName: (lastName: string) => void
+  setEmail: (email: string) => void
+  setImage: (image: string) => void
+  setId: (id: string) => void
+  logout: () => void
+  setUser: (user: UserState) => void
+  clearAccessToken: () => void
 }
 
 export type UserStore = UserState & UserActions
@@ -29,12 +29,10 @@ export const defaultInitState: UserState = {
   lastName: '',
   email: '',
   image: null,
-  id: '',
+  id: ''
 }
 
-export const createUserStore = (
-  initState: UserState = defaultInitState,
-) => {
+export const createUserStore = (initState: UserState = defaultInitState) => {
   return createStore<UserStore>()((set) => ({
     ...initState,
     setAccessToken: (accessToken: string) => set({ accessToken }),
@@ -45,6 +43,6 @@ export const createUserStore = (
     setId: (id: string) => set({ id }),
     logout: () => set(defaultInitState),
     setUser: (user: UserState) => set(user),
-    clearAccessToken: () => set({ accessToken: '' }),
+    clearAccessToken: () => set({ accessToken: '' })
   }))
 }

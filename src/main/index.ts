@@ -6,6 +6,10 @@ import { handleDeepLink } from './handleDeepLink'
 
 const PROTOCOL_NAME = 'flarecast'
 
+console.log('================================================================')
+console.log('flarecast://auth/success?refreshToken=asdfsfdadf')
+console.log('================================================================')
+
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient(PROTOCOL_NAME, process.execPath, [path.resolve(process.argv[1])])
@@ -27,8 +31,9 @@ if (!gotTheLock) {
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.focus()
     }
-
-    dialog.showErrorBox('Welcome Back', `You arrived from: ${commandLine.pop().slice(0, -1)}`)
+    const Url = commandLine.pop().slice(0, -1)
+    dialog.showErrorBox('Welcome Back', `You arrived from: ${Url}`)
+    handleDeepLink(mainWindow, new URL(Url))
   })
 
   // This method will be called when Electron has finished
@@ -56,11 +61,10 @@ if (!gotTheLock) {
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
   })
+
   app.on('open-url', (event, url) => {
     event.preventDefault()
-    const params = new URL(url).searchParams.get('data')
     dialog.showErrorBox('Welcome Back', `You arrived from: ${url}, ${params}`)
-
     handleDeepLink(mainWindow, new URL(url))
   })
 }
@@ -108,4 +112,4 @@ app.on('window-all-closed', () => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
-app.disableHardwareAcceleration()
+// app.disableHardwareAcceleration()

@@ -6,6 +6,7 @@ const api = {
     onAuthSuccess: (callback: (data: { refreshToken: string }) => void) => {
       const listener = (_event: Electron.IpcRendererEvent, data: { refreshToken: string }) => {
         if (data && typeof data.refreshToken === 'string') {
+          console.log('Received refresh token in preload:', data.refreshToken)
           callback(data)
         } else {
           console.error('Invalid data received for AUTHENTICATION_SUCCESS:', data)
