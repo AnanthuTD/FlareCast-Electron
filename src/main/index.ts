@@ -31,8 +31,8 @@ if (!gotTheLock) {
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.focus()
     }
-    const Url = commandLine.pop().slice(0, -1)
-    dialog.showErrorBox('Welcome Back', `You arrived from: ${Url}`)
+    const Url = commandLine.pop() as string
+    // dialog.showErrorBox('Welcome Back', `You arrived from: ${Url}`)
     handleDeepLink(mainWindow, new URL(Url))
   })
 
