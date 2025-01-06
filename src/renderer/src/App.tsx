@@ -6,7 +6,7 @@ const App: React.FC = () => {
   return (
     <UserStoreProvider>
       <AuthProvider>
-        <h1>Authenticated</h1>
+        <h1 className="text-red-900">Authenticated</h1>
       </AuthProvider>
     </UserStoreProvider>
   )
