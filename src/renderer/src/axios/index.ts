@@ -1,4 +1,4 @@
-import { createUserStore } from '@renderer/stores/userStore'
+import { useUserStore } from '@renderer/stores/userStore'
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
 
 const config: AxiosRequestConfig = {
@@ -12,7 +12,7 @@ const config: AxiosRequestConfig = {
 }
 
 const axiosInstance: AxiosInstance = axios.create(config)
-const userStore = createUserStore()
+const userStore = useUserStore
 
 // TODO: Remove this on production
 document.cookie =

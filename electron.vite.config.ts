@@ -24,7 +24,15 @@ export default defineConfig({
         '/api/user': {
           target: 'http://localhost:4001',
           changeOrigin: true,
-          rewrite: path => path.replace(/^\/api\/user/, '/api')
+          rewrite: (path) => path.replace(/^\/api\/user/, '/api')
+        }
+      }
+    },
+    build: {
+      rollupOptions: {
+        input: {
+          main: resolve(__dirname, 'src/renderer/index.html'),
+          studio: resolve(__dirname, 'src/renderer/studio.html')
         }
       }
     }

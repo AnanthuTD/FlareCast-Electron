@@ -27,6 +27,47 @@ const api = {
       ipcRenderer.on(AppEvents.AUTHENTICATION_FAILURE, listener)
       return () => ipcRenderer.removeListener(AppEvents.AUTHENTICATION_FAILURE, listener)
     }
+  },
+  window: {
+    close: () => ipcRenderer.send('window:close'),
+    openWebpage: (url) => ipcRenderer.send('open:webpage', url)
+  },
+  media: {
+    getScreenStream: async () => {
+      const sources = await ipcRenderer.invoke('get-sources')
+      console.log('screen source:', sources)
+      return sources
+    },
+    getScreenCapture: async (id: string) => {
+      return await ipcRenderer.invoke('get-screen-capture', id)
+    },
+    sendMediaSources: async (sources) => ipcRenderer.send('media:sources', sources)
+  },
+  studio: {
+    hidePluginWindow: (state: boolean) => {
+      ipcRenderer.send('hide:plugin', { state })
+    },
+    onSourceReceived: (callback) => {
+      const listener = (_event: Electron.IpcRendererEvent, profile) => {
+        callback(profile)
+      }
+      ipcRenderer.once('profile:received', listener)
+    },
+    resize: (shrink) => {
+      ipcRenderer.send('resize:studio', { shrink })
+    }
+  },
+  webcam: {
+    onWebcamChange: (callback) => {
+      const listener = (_event: Electron.IpcRendererEvent, webcam) => {
+        callback(webcam)
+      }
+      ipcRenderer.on('webcam:onChange', listener)
+      return () => ipcRenderer.removeListener('webcam:change', listener)
+    },
+    changeWebcam: (webcamId) => {
+      ipcRenderer.send('webcam:change', webcamId)
+    }
   }
 } satisfies Window['api']
 

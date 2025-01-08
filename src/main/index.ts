@@ -3,6 +3,8 @@ import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { handleDeepLink } from './handleDeepLink'
+import { handleRendererEvents } from './handleRendererEvents'
+import handleMediaEvents from './handleMediaEvents'
 
 const PROTOCOL_NAME = 'flarecast'
 
@@ -19,6 +21,8 @@ if (process.defaultApp) {
 }
 
 let mainWindow: BrowserWindow
+let studio: BrowserWindow
+let floatingWebCam: BrowserWindow
 
 const gotTheLock = app.requestSingleInstanceLock()
 
@@ -72,19 +76,84 @@ if (!gotTheLock) {
 function createWindow(): void {
   // Create the browser window.
   mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 350,
+    height: 400,
+    minHeight: 400,
+    minWidth: 300,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
-      sandbox: false
+      sandbox: false,
+      devTools: true
     },
-    frame: false
+    frame: false,
+    // transparent: true,
+    alwaysOnTop: true,
+    focusable: false
+    // icon: path.join(process.env['ELECTRON_RENDERER_URL'], 'flarecast.svg')
   })
 
+  // mainWindow.webContents.openDevTools()
+  mainWindow.setContentProtection(true)
+
+  studio = new BrowserWindow({
+    width: 300,
+    height: 50,
+    minHeight: 50,
+    minWidth: 300,
+    maxHeight: 400,
+    maxWidth: 400,
+    frame: false,
+    alwaysOnTop: true,
+    focusable: false,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+      devTools: true
+    },
+    transparent: true,
+    skipTaskbar: true
+  })
+
+  // studio.webContents.openDevTools()
+  studio.setContentProtection(true)
+  // studio.setIgnoreMouseEvents(true, { forward: true });
+
+  floatingWebCam = new BrowserWindow({
+    width: 200,
+    height: 200,
+    minHeight: 100,
+    minWidth: 100,
+    maxHeight: 400,
+    maxWidth: 400,
+    frame: false,
+    alwaysOnTop: true,
+    focusable: false,
+    webPreferences: {
+      preload: join(__dirname, '../preload/index.js'),
+      sandbox: false,
+      devTools: true
+    },
+    transparent: true
+  })
+
+  floatingWebCam.setContentProtection(true)
+
+  mainWindow.visibleOnAllWorkspaces = true
+  studio.visibleOnAllWorkspaces = true
+  floatingWebCam.visibleOnAllWorkspaces = true
+
+  mainWindow.setAlwaysOnTop(true, 'screen-saver', 1)
+  studio.setAlwaysOnTop(true, 'screen-saver', 1)
+  floatingWebCam.setAlwaysOnTop(true, 'screen-saver', 1)
+
   mainWindow.on('ready-to-show', () => {
+    mainWindow.show()
+  })
+
+  studio.on('ready-to-show', () => {
     mainWindow.show()
   })
 
@@ -93,13 +162,18 @@ function createWindow(): void {
     return { action: 'deny' }
   })
 
-  // HMR for renderer base on electron-vite cli.
-  // Load the remote URL for development or the local html file for production.
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+    studio.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/studio.html`)
+    floatingWebCam.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/webcam.html`)
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    studio.loadFile(join(__dirname, '../renderer/studio.html'))
+    studio.loadFile(join(__dirname, '../renderer/webcam.html'))
   }
+
+  handleRendererEvents(mainWindow)
+  handleMediaEvents(mainWindow)
 }
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -109,6 +183,48 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
   }
+})
+
+ipcMain.on('window:close', () => {
+  if (process.platform !== 'darwin') {
+    app.quit()
+  }
+})
+
+ipcMain.on('media:sources', (_event, payload) => {
+  console.log('media:sources', payload)
+  studio.webContents.send('profile:received', payload)
+})
+
+ipcMain.on('resize:studio', (_event, payload) => {
+  // const { x, y } = studio.getBounds() // Get the current position of the window
+  // const heightDifference = 50 // Difference in height between the two states (200 - 100)
+
+  if (payload.shrink) {
+    studio.setBounds({
+      // x, // Keep the X position unchanged
+      // y: y+heightDifference, // Move the window down by the height difference
+      width: 300,
+      height: 100
+    })
+  } else {
+    studio.setBounds({
+      // x, // Keep the X position unchanged
+      // y: y-heightDifference,
+      width: 300,
+      height: 200
+    })
+  }
+})
+
+ipcMain.on('hide:plugin', (_event, payload) => {
+  console.log(payload)
+  mainWindow.webContents.send('hide:plugin', payload)
+})
+
+ipcMain.on('webcam:change', (_event, payload) => {
+  console.log('webcam:change', payload)
+  floatingWebCam.webContents.send('webcam:onChange', payload)
 })
 
 // In this file you can include the rest of your app"s specific main process

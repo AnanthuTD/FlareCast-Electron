@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useUserStore } from './UserStoreProvider'
-import { UserState } from '@renderer/stores/userStore'
+import { UserState, useUserStore } from '@renderer/stores/userStore'
 import axios from 'axios'
 import axiosInstance from '@renderer/axios'
 import SignIn from '@renderer/components/sign-in'

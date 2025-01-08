@@ -1,4 +1,4 @@
-import { createStore } from 'zustand/vanilla'
+import { create } from 'zustand'
 
 export type UserState = {
   accessToken: string
@@ -14,7 +14,7 @@ export type UserActions = {
   setFirstName: (firstName: string) => void
   setLastName: (lastName: string) => void
   setEmail: (email: string) => void
-  setImage: (image: string) => void
+  setImage: (image: string | null) => void
   setId: (id: string) => void
   logout: () => void
   setUser: (user: UserState) => void
@@ -32,17 +32,16 @@ export const defaultInitState: UserState = {
   id: ''
 }
 
-export const createUserStore = (initState: UserState = defaultInitState) => {
-  return createStore<UserStore>()((set) => ({
-    ...initState,
-    setAccessToken: (accessToken: string) => set({ accessToken }),
-    setFirstName: (firstName: string) => set({ firstName }),
-    setLastName: (lastName: string) => set({ lastName }),
-    setEmail: (email: string) => set({ email }),
-    setImage: (image: string) => set({ image }),
-    setId: (id: string) => set({ id }),
-    logout: () => set(defaultInitState),
-    setUser: (user: UserState) => set(user),
-    clearAccessToken: () => set({ accessToken: '' })
-  }))
-}
+export const useUserStore = create<UserStore>((set) => ({
+  ...defaultInitState,
+
+  setAccessToken: (accessToken: string) => set(() => ({ accessToken })),
+  setFirstName: (firstName: string) => set(() => ({ firstName })),
+  setLastName: (lastName: string) => set(() => ({ lastName })),
+  setEmail: (email: string) => set(() => ({ email })),
+  setImage: (image: string | null) => set(() => ({ image })),
+  setId: (id: string) => set(() => ({ id })),
+  logout: () => set(() => defaultInitState),
+  setUser: (user: UserState) => set(() => ({ ...user })),
+  clearAccessToken: () => set(() => ({ accessToken: '' }))
+}))
