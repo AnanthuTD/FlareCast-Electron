@@ -1,11 +1,11 @@
 export enum SubscriptionPlan {
   PRO = 'PRO',
-  FREE = 'FREE',
+  FREE = 'FREE'
 }
 
 export enum Preset {
   HD = 'HD',
-  SD = 'SD',
+  SD = 'SD'
 }
 
 export interface Subscription {

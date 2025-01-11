@@ -4,6 +4,7 @@ import { CameraIcon, Mic, Monitor, Settings2, Video, VideoIcon } from 'lucide-re
 import SelectorButton, { SelectorButtonProps } from './SelectorButton'
 import { getMediaSources } from '@renderer/lib/utils'
 import { Sources } from 'src/types/types'
+import { useUserStore } from '@renderer/stores/userStore'
 
 interface Screen {
   deviceId: string
@@ -12,6 +13,8 @@ interface Screen {
 }
 
 function DeviceSelector() {
+  const userId = useUserStore((state) => state.id)
+
   const [screenOptions, setScreenOptions] = useState<Screen[]>([])
   const [cameraOptions, setCameraOptions] = useState<MediaDeviceInfo[]>([])
   const [micOptions, setMicOptions] = useState<MediaDeviceInfo[]>([])
@@ -45,8 +48,8 @@ function DeviceSelector() {
       screen: selectedScreen?.deviceId,
       audio: selectedMic?.deviceId,
       preset: selectedResolution,
-      plan: 'FREE',
-      id: '1234567890'
+      plan: 'PRO',
+      id: userId || '1234567890'
     })
     window.api.webcam.changeWebcam(selectedCam?.deviceId)
   }, [selectedMic, selectedResolution, selectedScreen, selectedCam])

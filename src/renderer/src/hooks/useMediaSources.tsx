@@ -25,7 +25,7 @@ export type SourceDeviceStateProps = {
 export const useMediaSources = ({}) => {
   const [state, action] = useReducer()
 
- const fetchMediaSources = ()=>{
-  action
- }
+  const fetchMediaSources = () => {
+    action
+  }
 }

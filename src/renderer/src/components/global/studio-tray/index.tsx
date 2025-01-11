@@ -1,4 +1,4 @@
-import { onStopRecording, selectSources, startRecording } from '@renderer/lib/recorder'
+import { onStopRecording, saveVideo, selectSources, startRecording } from '@renderer/lib/recorder'
 import { cn, videoRecordingTime } from '@renderer/lib/utils'
 import { Cast, Pause, Square } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
@@ -98,6 +98,7 @@ const StudioTray = () => {
               setRecording(false)
               clearTime()
               onStopRecording()
+              saveVideo()
             }}
             stroke="white"
           />

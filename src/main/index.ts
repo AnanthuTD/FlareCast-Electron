@@ -95,7 +95,7 @@ function createWindow(): void {
     // icon: path.join(process.env['ELECTRON_RENDERER_URL'], 'flarecast.svg')
   })
 
-  // mainWindow.webContents.openDevTools()
+  mainWindow.webContents.openDevTools()
   mainWindow.setContentProtection(true)
 
   studio = new BrowserWindow({
@@ -117,7 +117,7 @@ function createWindow(): void {
     skipTaskbar: true
   })
 
-  // studio.webContents.openDevTools()
+  studio.webContents.openDevTools()
   studio.setContentProtection(true)
   // studio.setIgnoreMouseEvents(true, { forward: true });
 

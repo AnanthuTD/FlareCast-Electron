@@ -21,7 +21,7 @@ export default function handleMediaEvents(mainWindow: BrowserWindow) {
       // Fetch screen and window sources
       const sources = await desktopCapturer.getSources({
         types: ['screen', 'window'],
-        fetchWindowIcons: true,
+        fetchWindowIcons: true
       })
 
       const selectedSource = sources.find((s) => s.id === id)

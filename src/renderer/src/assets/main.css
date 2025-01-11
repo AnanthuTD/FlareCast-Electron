@@ -69,11 +69,10 @@ body {
   body {
     @apply font-sans antialiased text-foreground;
   }
-  .background-theme{
-    @apply bg-background
+  .background-theme {
+    @apply bg-background;
   }
 }
-
 
 .draggable {
   -webkit-user-select: none;
@@ -84,11 +83,10 @@ body {
   -webkit-app-region: no-drag;
 }
 
-.mirror
-{
-    transform: rotateY(180deg);
-    -webkit-transform:rotateY(180deg); /* Safari and Chrome */
-    -moz-transform:rotateY(180deg); /* Firefox */
+.mirror {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg); /* Safari and Chrome */
+  -moz-transform: rotateY(180deg); /* Firefox */
 }
 
 .clickable {

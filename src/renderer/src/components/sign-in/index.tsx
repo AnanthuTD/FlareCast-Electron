@@ -42,18 +42,18 @@ function SignIn() {
 
       {/* Authentication Buttons */}
       <div className="flex flex-col items-center justify-center h-full">
-        <button
+        <Button
           onClick={handleSignIn}
-          className="mb-4 px-6 py-3 text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition"
+          className="mb-4 px-6 py-3 text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition  non-draggable"
         >
           Sign In
-        </button>
-        <button
+        </Button>
+        <Button
           onClick={handleSignUp}
-          className="px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600 transition"
+          className="px-6 py-3 text-white bg-green-500 rounded-lg hover:bg-green-600 transition  non-draggable"
         >
           Sign Up
-        </button>
+        </Button>
       </div>
     </div>
   )

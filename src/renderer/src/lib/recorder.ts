@@ -1,3 +1,4 @@
+import { createWriteStream } from 'fs'
 import React from 'react'
 import { io } from 'socket.io-client'
 import { Sources } from 'src/types/types'
@@ -19,12 +20,43 @@ export const onStopRecording = () => {
   mediaRecorder.stop()
 }
 
+const recordedBlobs: BlobEvent['data'][] = []
+let count = 0
+
+// Handle `onDataAvailable`
 export const onDataAvailable = (e: BlobEvent) => {
-  // alert('onDataAvailable')
-  socket.emit('video:chunks', {
-    chunks: e.data,
-    fileName: videoTransferFileName
-  })
+  console.log(e.data)
+  console.log('chunk: ', count + 1)
+  recordedBlobs.push(e.data)
+
+  const reader = new FileReader()
+
+  reader.onloadend = () => {
+    // Use onloadend for TypedArray
+    const buffer = new Uint8Array(reader.result) // Create a typed array
+    socket.emit('video:chunks', {
+      chunks: buffer,
+      fileName: videoTransferFileName,
+      count: ++count
+    })
+  }
+
+  reader.readAsArrayBuffer(e.data) // Read the Blob as ArrayBuffer
+}
+
+// Save the recorded video locally
+export const saveVideo = () => {
+  const blob = new Blob(recordedBlobs, { type: 'video/webm' })
+  const url = URL.createObjectURL(blob)
+
+  // Create a downloadable link
+  const a = document.createElement('a')
+  a.style.display = 'none'
+  a.href = url
+  a.download = `${videoTransferFileName}.webm`
+  document.body.appendChild(a)
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 export const stopRecording = () => {
