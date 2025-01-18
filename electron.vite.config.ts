@@ -22,7 +22,8 @@ export default defineConfig({
     server: {
       proxy: {
         '/api/user': {
-          target: 'http://localhost:4001',
+          // target: 'http://localhost:4001',
+          target: "http://api.flarecast.com/user",
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/api\/user/, '/api')
         }

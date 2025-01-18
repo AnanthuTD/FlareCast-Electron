@@ -8,7 +8,7 @@ let videoTransferFileName: string | undefined
 let mediaRecorder: MediaRecorder
 let userId: string
 
-const socket = io(import.meta.env.VITE_SOCKET_URL)
+const socket = io(import.meta.env.VITE_SOCKET_URL, {path: '/video/socket.io'})
 
 export const startRecording = (onSources: { screen: string; audio: string; id: string }) => {
   window.api.studio.hidePluginWindow(true)

@@ -34,7 +34,10 @@ linux:
   desktop: # Define desktop elem
     exec: flarecast %u # Define Exec
   target:
-    - target: deb
+    - target: AppImage
+      arch:
+        - x64
+    - target: snap
       arch:
         - x64
 appImage:

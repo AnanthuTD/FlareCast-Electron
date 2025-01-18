@@ -80,8 +80,8 @@ function createWindow(): void {
     height: 400,
     minHeight: 400,
     minWidth: 300,
-    show: false,
-    autoHideMenuBar: true,
+    // show: false,
+    // autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -89,9 +89,10 @@ function createWindow(): void {
       devTools: true
     },
     frame: false,
-    // transparent: true,
+    transparent: true,
     alwaysOnTop: true,
-    focusable: false
+    // resizable: true,
+    // focusable: false
     // icon: path.join(process.env['ELECTRON_RENDERER_URL'], 'flarecast.svg')
   })
 
@@ -107,7 +108,7 @@ function createWindow(): void {
     maxWidth: 400,
     frame: false,
     alwaysOnTop: true,
-    focusable: false,
+    // focusable: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -130,7 +131,7 @@ function createWindow(): void {
     maxWidth: 400,
     frame: false,
     alwaysOnTop: true,
-    focusable: false,
+    // focusable: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -229,4 +230,4 @@ ipcMain.on('webcam:change', (_event, payload) => {
 
 // In this file you can include the rest of your app"s specific main process
 // code. You can also put them in separate files and require them here.
-// app.disableHardwareAcceleration()
+app.disableHardwareAcceleration()
