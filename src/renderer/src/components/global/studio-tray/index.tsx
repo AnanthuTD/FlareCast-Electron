@@ -14,10 +14,19 @@ const StudioTray = () => {
   const videoElement = useRef<HTMLVideoElement | null>(null)
   const initialTime = new Date()
 
-  window.api.studio.onSourceReceived((profile) => {
-    console.log(profile)
-    setOnSources(profile)
-  })
+  useEffect(() => {
+    const unsub = window.api.studio.onSourceReceived((profile) => {
+      if (JSON.stringify(profile) === JSON.stringify(onSources)) {
+        return;
+      }
+      console.log(profile)
+      setOnSources(profile)
+    })
+
+    return () => {
+      unsub()
+    }
+  }, [])
 
   const clearTime = () => {
     setCount(0)

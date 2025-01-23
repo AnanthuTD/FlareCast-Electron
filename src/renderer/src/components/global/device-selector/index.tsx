@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@renderer/components/ui/tabs'
-import { CameraIcon, Mic, Monitor, Settings2, Video, VideoIcon } from 'lucide-react'
+import { CameraIcon, Mic, Monitor, Video, VideoIcon } from 'lucide-react'
 import SelectorButton, { SelectorButtonProps } from './SelectorButton'
-import { getMediaSources } from '@renderer/lib/utils'
-import { Sources } from 'src/types/types'
+import { getCameras, getMediaSources, getMicrophones, getScreens } from '@renderer/lib/utils'
 import { useUserStore } from '@renderer/stores/userStore'
 
 interface Screen {
@@ -22,9 +21,8 @@ function DeviceSelector() {
   const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null)
   const [selectedMic, setSelectedMic] = useState<MediaDeviceInfo | null>(null)
   const [selectedCam, setSelectedCam] = useState<MediaDeviceInfo | null>(null)
-  const [selectedResolution, setSelectedResolution] = useState<Sources['preset']>('HD')
 
-  useEffect(() => {
+/*   useEffect(() => {
     const fetchMediaSources = async () => {
       try {
         const mediaSources = await getMediaSources()
@@ -41,18 +39,70 @@ function DeviceSelector() {
     }
 
     fetchMediaSources()
-  }, [])
+  }, []) */
+
+  const fetchScreens = async () => {
+    try {
+      console.log('Fetching screens ...')
+      // fetch screens and windows
+      const { screens } = (await getScreens()) || { screens: [] }
+      setScreenOptions(screens || [])
+      console.log('screens: ', screens)
+      if (screens.length === 1) setSelectedScreen(screens?.[0] || null)
+    } catch (error) {
+      console.error('Error fetching media sources:', error)
+    }
+  }
+
+  const fetchCameras = async () => {
+    try {
+      const cameras = await getCameras()
+      setCameraOptions(cameras.videoInputs || [])
+    } catch (error) {
+      console.error('Error fetching media sources:', error)
+    }
+  }
+
+  const fetchMicrophones = async () => {
+    try {
+      const microphones = await getMicrophones()
+      setMicOptions(microphones.audioInputs || [])
+      setSelectedMic(microphones.audioInputs?.[0] || null)
+    } catch (error) {
+      console.error('Error fetching media sources:', error)
+    }
+  }
 
   useEffect(() => {
     window.api.media.sendMediaSources({
       screen: selectedScreen?.deviceId,
       audio: selectedMic?.deviceId,
-      preset: selectedResolution,
-      plan: 'PRO',
-      id: userId || '1234567890'
+      id: userId
     })
+  }, [selectedMic, selectedScreen])
+
+  useEffect(() => {
     window.api.webcam.changeWebcam(selectedCam?.deviceId)
-  }, [selectedMic, selectedResolution, selectedScreen, selectedCam])
+  }, [selectedMic, selectedScreen, selectedCam])
+
+  const NoScreenOption = {
+    label: 'No Screen',
+    icon: <Monitor />,
+    deviceId: '',
+    thumbnail: undefined
+  }
+  const NoCamOption = {
+    label: 'No Cam',
+    icon: <Video />,
+    deviceId: '',
+    thumbnail: undefined
+  }
+  const NoMicOption = {
+    label: 'No Mic',
+    icon: <Mic />,
+    deviceId: '',
+    thumbnail: undefined
+  }
 
   const screenSelector: SelectorButtonProps = {
     icon: <Monitor />,
@@ -64,12 +114,19 @@ function DeviceSelector() {
         console.log('Selected screen device:', selected)
       }
     },
-    options: screenOptions.map((selector) => ({
-      deviceId: selector.deviceId,
-      label: selector.label,
-      icon: <Monitor />,
-      ...(selector.thumbnail && { thumbnail: selector.thumbnail })
-    }))
+    options: [
+      NoScreenOption,
+      ...screenOptions.map((selector) => ({
+        deviceId: selector.deviceId,
+        label: selector.label,
+        icon: <Monitor />,
+        ...(selector.thumbnail && { thumbnail: selector.thumbnail })
+      }))
+    ],
+    onClick: () => {
+      console.log('Click on screen selector')
+      fetchScreens()
+    }
   }
 
   const cameraSelector: SelectorButtonProps = {
@@ -82,11 +139,17 @@ function DeviceSelector() {
         console.log('Selected camera device:', selected)
       }
     },
-    options: cameraOptions.map((selector) => ({
-      deviceId: selector.deviceId,
-      label: selector.label,
-      icon: <Video />
-    }))
+    options: [
+      NoCamOption,
+      ...cameraOptions.map((selector) => ({
+        deviceId: selector.deviceId,
+        label: selector.label,
+        icon: <Video />
+      }))
+    ],
+    onClick: () => {
+      fetchCameras()
+    }
   }
 
   const micSelector: SelectorButtonProps = {
@@ -99,31 +162,17 @@ function DeviceSelector() {
         console.log('Selected microphone device:', selected)
       }
     },
-    options: micOptions.map((selector) => ({
-      deviceId: selector.deviceId,
-      label: selector.label,
-      icon: <Mic />
-    }))
-  }
-
-  const resolutionSelector: SelectorButtonProps = {
-    icon: <Settings2 />,
-    label: 'HD',
-    onSelect: (resolution) => {
-      setSelectedResolution(resolution)
-    },
     options: [
-      {
-        deviceId: 'SD',
-        icon: <Settings2 />,
-        label: 'SD'
-      },
-      {
-        deviceId: 'HD',
-        icon: <Settings2 />,
-        label: 'HD'
-      }
-    ]
+      NoMicOption,
+      ...micOptions.map((selector) => ({
+        deviceId: selector.deviceId,
+        label: selector.label,
+        icon: <Mic />
+      }))
+    ],
+    onClick: () => {
+      fetchMicrophones()
+    }
   }
 
   return (
@@ -140,7 +189,6 @@ function DeviceSelector() {
         <SelectorButton {...screenSelector} />
         <SelectorButton {...cameraSelector} />
         <SelectorButton {...micSelector} />
-        <SelectorButton {...resolutionSelector} />
       </TabsContent>
       <TabsContent value="screen-shot">Work in progress</TabsContent>
     </Tabs>

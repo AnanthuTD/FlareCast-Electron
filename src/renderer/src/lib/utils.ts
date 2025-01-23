@@ -29,6 +29,50 @@ export const getMediaSources = async () => {
   }
 }
 
+export const getScreens = async () => {
+  try {
+    const screens = await window.api.media.getScreenStream()
+    if (!screens || screens.length === 0) {
+      throw new Error('No screen sources available')
+    }
+
+    return { screens }
+  } catch (error) {
+    console.error('Error fetching screen sources:', error)
+    return []
+  }
+}
+
+export const getCameras = async () => {
+  try {
+    const enumerateDevices = await navigator.mediaDevices.enumerateDevices()
+
+    const videoInputs = enumerateDevices.filter((device) => {
+      return device.kind === 'videoinput'
+    })
+
+    return { videoInputs }
+  } catch (error) {
+    console.error('Error fetching camera sources:', error)
+    return { videoInputs: [] }
+  }
+}
+
+export const getMicrophones = async () => {
+  try {
+    const enumerateDevices = await navigator.mediaDevices.enumerateDevices()
+
+    const audioInputs = enumerateDevices.filter((device) => {
+      return device.kind === 'audioinput'
+    })
+
+    return { audioInputs }
+  } catch (error) {
+    console.error('Error fetching microphone sources:', error)
+    return { audioInputs: [] }
+  }
+}
+
 export const videoRecordingTime = (ms: number) => {
   const seconds = Math.floor((ms / 1000) % 60)
     .toString()

@@ -3,16 +3,22 @@ import { BrowserWindow, desktopCapturer, session, ipcMain } from 'electron'
 export default function handleMediaEvents(mainWindow: BrowserWindow) {
   // Handle 'get-sources' IPC call to get available screen and window sources
   ipcMain.handle('get-sources', async () => {
-    const sources = await desktopCapturer.getSources({
-      types: ['screen', 'window'],
-      fetchWindowIcons: true
-    })
+    try {
+      const sources = await desktopCapturer.getSources({
+        types: ['screen', 'window'],
+        fetchWindowIcons: true
+      })
 
-    return sources.map((source) => ({
-      deviceId: source.id,
-      label: source.name,
-      thumbnail: source.thumbnail.toDataURL()
-    }))
+      return sources.map((source) => ({
+        deviceId: source.id,
+        label: source.name,
+        thumbnail: source.thumbnail.toDataURL(),
+        icon: source.appIcon
+      }))
+    } catch (error) {
+      console.error('Failed to get sources:', error)
+      return []
+    }
   })
 
   // Handle the screen capture with system audio (loopback)

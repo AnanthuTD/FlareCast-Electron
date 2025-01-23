@@ -8,10 +8,6 @@ import handleMediaEvents from './handleMediaEvents'
 
 const PROTOCOL_NAME = 'flarecast'
 
-console.log('================================================================')
-console.log('flarecast://auth/success?refreshToken=asdfsfdadf')
-console.log('================================================================')
-
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient(PROTOCOL_NAME, process.execPath, [path.resolve(process.argv[1])])
@@ -30,38 +26,24 @@ if (!gotTheLock) {
   app.quit()
 } else {
   app.on('second-instance', (_event, commandLine) => {
-    // Someone tried to run a second instance, we should focus our window.
     if (mainWindow) {
       if (mainWindow.isMinimized()) mainWindow.restore()
       mainWindow.focus()
     }
     const Url = commandLine.pop() as string
-    // dialog.showErrorBox('Welcome Back', `You arrived from: ${Url}`)
     handleDeepLink(mainWindow, new URL(Url))
   })
 
-  // This method will be called when Electron has finished
-  // initialization and is ready to create browser windows.
-  // Some APIs can only be used after this event occurs.
   app.whenReady().then(() => {
-    // Set app user model id for windows
     electronApp.setAppUserModelId('com.electron')
 
-    // Default open or close DevTools by F12 in development
-    // and ignore CommandOrControl + R in production.
-    // see https://github.com/alex8088/electron-toolkit/tree/master/packages/utils
     app.on('browser-window-created', (_, window) => {
       optimizer.watchWindowShortcuts(window)
     })
 
-    // IPC test
-    ipcMain.on('ping', () => console.log('pong'))
-
     createWindow()
 
     app.on('activate', function () {
-      // On macOS it's common to re-create a window in the app when the
-      // dock icon is clicked and there are no other windows open.
       if (BrowserWindow.getAllWindows().length === 0) createWindow()
     })
   })
@@ -80,8 +62,7 @@ function createWindow(): void {
     height: 400,
     minHeight: 400,
     minWidth: 300,
-    // show: false,
-    // autoHideMenuBar: true,
+    autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
@@ -93,10 +74,10 @@ function createWindow(): void {
     alwaysOnTop: true,
     // resizable: true,
     // focusable: false
-    // icon: path.join(process.env['ELECTRON_RENDERER_URL'], 'flarecast.svg')
+    icon: path.join(process.env['ELECTRON_RENDERER_URL'], 'flarecast.svg')
   })
 
-  mainWindow.webContents.openDevTools()
+  // mainWindow.webContents.openDevTools()
   mainWindow.setContentProtection(true)
 
   studio = new BrowserWindow({
@@ -118,7 +99,7 @@ function createWindow(): void {
     skipTaskbar: true
   })
 
-  studio.webContents.openDevTools()
+  // studio.webContents.openDevTools()
   studio.setContentProtection(true)
   // studio.setIgnoreMouseEvents(true, { forward: true });
 
@@ -193,8 +174,11 @@ ipcMain.on('window:close', () => {
 })
 
 ipcMain.on('media:sources', (_event, payload) => {
-  console.log('media:sources', payload)
-  studio.webContents.send('profile:received', payload)
+  try {
+    studio.webContents.send('profile:received', payload)
+  } catch (error) {
+    console.log('failed to send profile')
+  }
 })
 
 ipcMain.on('resize:studio', (_event, payload) => {

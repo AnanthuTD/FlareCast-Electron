@@ -22,9 +22,10 @@ export type SelectorButtonProps = {
   label: string
   icon: React.ReactNode
   onSelect: (deviceId: string) => void
+  onClick?: () => void
 }
 
-function SelectorButton({ label, options, icon, onSelect }: SelectorButtonProps) {
+function SelectorButton({ label, options, icon, onSelect, onClick }: SelectorButtonProps) {
   const [selected, setSelected] = useState<Option>(options[0])
 
   const handleSelect = (deviceId: string) => {
@@ -33,7 +34,7 @@ function SelectorButton({ label, options, icon, onSelect }: SelectorButtonProps)
   }
 
   return (
-    <DropdownMenu>
+    <DropdownMenu onOpenChange={(isOpen) => isOpen && onClick?.()}>
       <DropdownMenuTrigger className="flex items-center gap-2 px-4 py-2 text-sm font-medium w-full border shadow rounded-sm hover:bg-slate-300">
         {icon} {selected ? selected.label : label}
       </DropdownMenuTrigger>

@@ -51,7 +51,8 @@ const api = {
       const listener = (_event: Electron.IpcRendererEvent, profile) => {
         callback(profile)
       }
-      ipcRenderer.once('profile:received', listener)
+      ipcRenderer.on('profile:received', listener)
+      return () => ipcRenderer.removeListener('profile:received', listener)
     },
     resize: (shrink) => {
       ipcRenderer.send('resize:studio', { shrink })
@@ -66,7 +67,7 @@ const api = {
       return () => ipcRenderer.removeListener('webcam:change', listener)
     },
     changeWebcam: (webcamId) => {
-      ipcRenderer.send('webcam:change', webcamId)
+      if (webcamId) ipcRenderer.send('webcam:change', webcamId)
     }
   }
 } satisfies Window['api']

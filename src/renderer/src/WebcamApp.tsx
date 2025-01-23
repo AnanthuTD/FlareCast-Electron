@@ -1,6 +1,5 @@
 import React, { useEffect, useRef } from 'react'
 import { ThemeProvider } from './providers/theme-provider'
-import { getMediaSources } from './lib/utils'
 
 const WebcamApp: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null)

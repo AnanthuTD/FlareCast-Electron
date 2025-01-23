@@ -13,8 +13,7 @@ interface WindowApis {
 interface Sources {
   screen?: string
   audio?: string
-  preset: 'HD' | 'SD'
-  plan: 'PRO' | 'FREE'
+  // plan: 'PRO' | 'FREE'
   id: string
 }
 

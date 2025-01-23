@@ -15,8 +15,7 @@ const axiosInstance: AxiosInstance = axios.create(config)
 const userStore = useUserStore
 
 // TODO: Remove this on production
-document.cookie =
-  'refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjM5NTFkMGE0LTYxYzItNDUyZS1hYmZkLTljZGI5Y2U3NWM2MiIsImlhdCI6MTczNzE3Mjk1NiwiZXhwIjoxNzM5NzY0OTU2fQ.fjtu4P-iL-L3PWwo7ZYUjx5zJKxrbkKc5Hq34RCh4f8;'
+document.cookie = import.meta.env.DEV ? import.meta.env.VITE_CUSTOM_COOKIE : ''
 
 axiosInstance.interceptors.request.use(
   (config) => {
