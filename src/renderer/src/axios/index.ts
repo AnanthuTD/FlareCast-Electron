@@ -46,7 +46,7 @@ axiosInstance.interceptors.response.use(
       if (!originalRequest._retry) {
         originalRequest._retry = true
         try {
-          const response = await axios.get('/api/user/auth/refresh-token')
+          const response = await axios.get('api/user/auth/refresh-token')
           const newAccessToken = response.data.accessToken
 
           userStore.getState().setAccessToken(newAccessToken)

@@ -3,18 +3,14 @@ import { Button } from '../ui/button'
 
 function SignIn() {
   const handleSignIn = () => {
-    const AuthURL = `${
-      import.meta.env.DEV ? import.meta.env.VITE_DEV_AUTH_URL : import.meta.env.VITE_PRO_AUTH_URL
-    }?callbackUrl=flarecast://app/auth/success`
+    const AuthURL = `${import.meta.env.VITE_SIGNIN_URL}?callbackUrl=flarecast://app/auth/success`
 
     window.open(AuthURL, '_blank')
   }
 
   const handleSignUp = () => {
     const SignUpURL = `${
-      import.meta.env.DEV
-        ? import.meta.env.VITE_DEV_SIGNUP_URL
-        : import.meta.env.VITE_PRO_SIGNUP_URL
+      import.meta.env.VITE_SIGNUP_URL
     }?callbackUrl=flarecast://app/auth/success`
 
     window.open(SignUpURL, '_blank')

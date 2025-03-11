@@ -35,17 +35,21 @@ if (!gotTheLock) {
   })
 
   app.whenReady().then(() => {
-    electronApp.setAppUserModelId('com.electron')
+    try {
+      electronApp.setAppUserModelId('com.electron')
 
-    app.on('browser-window-created', (_, window) => {
-      optimizer.watchWindowShortcuts(window)
-    })
+      app.on('browser-window-created', (_, window) => {
+        optimizer.watchWindowShortcuts(window)
+      })
 
-    createWindow()
+      createWindow()
 
-    app.on('activate', function () {
-      if (BrowserWindow.getAllWindows().length === 0) createWindow()
-    })
+      app.on('activate', function () {
+        if (BrowserWindow.getAllWindows().length === 0) createWindow()
+      })
+    } catch (error) {
+      console.error('Error initializing app:', error)
+    }
   })
 
   app.on('open-url', (event, url) => {
@@ -56,6 +60,8 @@ if (!gotTheLock) {
 }
 
 function createWindow(): void {
+  console.log('__dirname: ', __dirname)
+  console.log("process.env['ELECTRON_RENDERER_URL'] ", process.env['ELECTRON_RENDERER_URL'])
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 350,
@@ -74,7 +80,7 @@ function createWindow(): void {
     alwaysOnTop: true,
     // resizable: true,
     // focusable: false
-    icon: path.join(process.env['ELECTRON_RENDERER_URL'], 'flarecast.svg')
+    // icon: path.join(process.env['ELECTRON_RENDERER_URL'], 'flarecast.svg')
   })
 
   // mainWindow.webContents.openDevTools()
@@ -118,10 +124,11 @@ function createWindow(): void {
       sandbox: false,
       devTools: true
     },
-    transparent: true
+    transparent: true,
+    skipTaskbar: true
   })
 
-  floatingWebCam.setContentProtection(true)
+  // floatingWebCam.setContentProtection(true)
 
   mainWindow.visibleOnAllWorkspaces = true
   studio.visibleOnAllWorkspaces = true
