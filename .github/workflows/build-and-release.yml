@@ -1,0 +1,54 @@
+name: Build and Release Electron App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Create .env.production file
+        uses: SpicyPizza/create-envfile@v2.0
+        with:
+          envkey_VITE_SIGNIN_URL: ${{ secrets.PROD_VITE_SIGNIN_URL }}
+          envkey_VITE_SIGNUP_URL: ${{ secrets.PROD_VITE_SIGNUP_URL }}
+          envkey_VITE_APP_URL: ${{ secrets.PROD_VITE_APP_URL }}
+          envkey_VITE_SOCKET_URL: ${{ secrets.PROD_VITE_SOCKET_URL }}
+          envkey_VITE_SOCKET_URL_PATH: ${{ secrets.PROD_VITE_SOCKET_URL_PATH }}
+          envkey_VITE_USER_SERVICE_URL: ${{ secrets.PROD_VITE_USER_SERVICE_URL }}
+          directory: './' # Root of your project
+          file_name: '.env.production'
+          fail_on_empty: true # Fail the workflow if any env var is missing
+          sort_keys: false
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build app
+        run: npm run build
+
+      - name: Package Electron app
+        run: npm run build:electron
+
+      - name: Create release and upload artifacts
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/**/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
