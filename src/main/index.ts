@@ -1,7 +1,9 @@
 import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
 import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
-import icon from '../../resources/icon.png?asset'
+import winIcon from '../../resources/icons/win/icon.ico?asset'
+import macIcon from '../../resources/icons/mac/icon.icns?asset'
+import linuxIcon from '../../resources/icons/png/512x512.png?asset'
 import { handleDeepLink } from './handleDeepLink'
 import { handleRendererEvents } from './handleRendererEvents'
 import handleMediaEvents from './handleMediaEvents'
@@ -54,22 +56,28 @@ if (!gotTheLock) {
 
   app.on('open-url', (event, url) => {
     event.preventDefault()
-    dialog.showErrorBox('Welcome Back', `You arrived from: ${url}, ${params}`)
+    dialog.showErrorBox('Welcome Back', `You arrived from: ${url}`)
     handleDeepLink(mainWindow, new URL(url))
   })
 }
 
+function getIconPath() {
+  if (process.platform === 'win32') {
+    return winIcon
+  } else if (process.platform === 'darwin') {
+    return macIcon
+  } else {
+    return linuxIcon
+  }
+}
+
 function createWindow(): void {
-  console.log('__dirname: ', __dirname)
-  console.log("process.env['ELECTRON_RENDERER_URL'] ", process.env['ELECTRON_RENDERER_URL'])
-  // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 350,
     height: 400,
     minHeight: 400,
     minWidth: 300,
     autoHideMenuBar: true,
-    ...(process.platform === 'linux' ? { icon } : {}),
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
@@ -78,12 +86,9 @@ function createWindow(): void {
     frame: false,
     transparent: true,
     alwaysOnTop: true,
-    // resizable: true,
-    // focusable: false
-    // icon: path.join(process.env['ELECTRON_RENDERER_URL'], 'flarecast.svg')
+    icon: getIconPath()
   })
 
-  // mainWindow.webContents.openDevTools()
   mainWindow.setContentProtection(true)
 
   studio = new BrowserWindow({
@@ -95,19 +100,17 @@ function createWindow(): void {
     maxWidth: 400,
     frame: false,
     alwaysOnTop: true,
-    // focusable: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       devTools: true
     },
     transparent: true,
-    skipTaskbar: true
+    skipTaskbar: true,
+    icon: getIconPath()
   })
 
-  // studio.webContents.openDevTools()
   studio.setContentProtection(true)
-  // studio.setIgnoreMouseEvents(true, { forward: true });
 
   floatingWebCam = new BrowserWindow({
     width: 200,
@@ -118,17 +121,15 @@ function createWindow(): void {
     maxWidth: 400,
     frame: false,
     alwaysOnTop: true,
-    // focusable: false,
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
       devTools: true
     },
     transparent: true,
-    skipTaskbar: true
+    skipTaskbar: true,
+    icon: getIconPath()
   })
-
-  // floatingWebCam.setContentProtection(true)
 
   mainWindow.visibleOnAllWorkspaces = true
   studio.visibleOnAllWorkspaces = true
@@ -158,7 +159,7 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     studio.loadFile(join(__dirname, '../renderer/studio.html'))
-    studio.loadFile(join(__dirname, '../renderer/webcam.html'))
+    floatingWebCam.loadFile(join(__dirname, '../renderer/webcam.html')) // Fixed typo
   }
 
   handleRendererEvents(mainWindow)
