@@ -25,12 +25,12 @@ jobs:
       - name: Create .env.production file
         uses: SpicyPizza/create-envfile@v2.0
         with:
-          envkey_VITE_SIGNIN_URL: ${{ secrets.PROD_VITE_SIGNIN_URL }}
-          envkey_VITE_SIGNUP_URL: ${{ secrets.PROD_VITE_SIGNUP_URL }}
-          envkey_VITE_APP_URL: ${{ secrets.PROD_VITE_APP_URL }}
-          envkey_VITE_SOCKET_URL: ${{ secrets.PROD_VITE_SOCKET_URL }}
-          envkey_VITE_SOCKET_URL_PATH: ${{ secrets.PROD_VITE_SOCKET_URL_PATH }}
-          envkey_VITE_USER_SERVICE_URL: ${{ secrets.PROD_VITE_USER_SERVICE_URL }}
+          envkey_VITE_SIGNIN_URL: ${{ secrets.VITE_SIGNIN_URL }}
+          envkey_VITE_SIGNUP_URL: ${{ secrets.VITE_SIGNUP_URL }}
+          envkey_VITE_APP_URL: ${{ secrets.VITE_APP_URL }}
+          envkey_VITE_SOCKET_URL: ${{ secrets.VITE_SOCKET_URL }}
+          envkey_VITE_SOCKET_URL_PATH: ${{ secrets.VITE_SOCKET_URL_PATH }}
+          envkey_VITE_USER_SERVICE_URL: ${{ secrets.VITE_USER_SERVICE_URL }}
           directory: './' # Root of your project
           file_name: '.env.production'
           fail_on_empty: true # Fail the workflow if any env var is missing
