@@ -22,15 +22,6 @@ jobs:
         with:
           node-version: 20
 
-      - name: Check if secrets are available
-        run: |
-          if [ -z "${{ secrets.VITE_SIGNIN_URL }}" ]; then
-            echo "SECRET_KEY is missing!"
-            exit 1
-          else
-            echo "SECRET_KEY is set."
-          fi
-
       - name: Create .env.production file
         uses: SpicyPizza/create-envfile@v2.0
         with:
