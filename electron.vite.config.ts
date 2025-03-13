@@ -38,7 +38,8 @@ export default defineConfig(({ mode, command }) => {
         rollupOptions: {
           input: {
             main: resolve(__dirname, 'src/renderer/index.html'),
-            studio: resolve(__dirname, 'src/renderer/studio.html')
+            studio: resolve(__dirname, 'src/renderer/studio.html'),
+            webcam: resolve(__dirname, 'src/renderer/webcam.html')
           }
         }
       }
