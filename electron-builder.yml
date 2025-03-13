@@ -1,7 +1,7 @@
 appId: com.electron.app
 productName: flarecast
 directories:
-  buildResources: build
+  buildResources: resources
 files:
   - '!**/.vscode/*'
   - '!src/*'
@@ -12,14 +12,25 @@ files:
 asarUnpack:
   - resources/**
 win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+    - target: msi
+      arch:
+        - x64
+  icon: resources/icons/win/icon.ico
   executableName: flarecast
 nsis:
   artifactName: ${name}-${version}-setup.${ext}
   shortcutName: ${productName}
   uninstallDisplayName: ${productName}
   createDesktopShortcut: always
+  createStartMenuShortcut: true
+  installerIcon: resources/icons/win/icon.ico
 mac:
-  entitlementsInherit: build/entitlements.mac.plist
+  icon: resources/icons/mac/icon.icns
+  entitlementsInherit: resources/entitlements.mac.plist
   extendInfo:
     - NSCameraUsageDescription: Application requests access to the device's camera.
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
@@ -29,10 +40,11 @@ mac:
 dmg:
   artifactName: ${name}-${version}.${ext}
 linux:
+  icon: resources/icons/png/512x512.png
   category: Utility
-  mimeTypes: [x-scheme-handler/flarecast] # Define MimeType
-  desktop: # Define desktop elem
-    exec: flarecast %u # Define Exec
+  mimeTypes: [x-scheme-handler/flarecast]
+  desktop:
+    exec: flarecast %u
   target:
     - target: AppImage
       arch:
