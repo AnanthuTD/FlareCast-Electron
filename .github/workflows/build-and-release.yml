@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [windows-latest]
 
     steps:
       - name: Checkout code
@@ -39,11 +39,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build app
-        run: npm run build
-
-      - name: Package Electron app
-        run: npm run build:electron
+      - name: Build app and Package Electron app
+        run: npm run build:win
 
       - name: Create release and upload artifacts
         uses: softprops/action-gh-release@v2
