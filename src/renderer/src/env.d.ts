@@ -4,6 +4,7 @@ interface ImportMetaEnv {
   readonly VITE_SIGNUP_URL: string
   readonly VITE_APP_URL: string
   readonly VITE_SOCKET_URL: string
+  readonly VITE_USER_SERVICE_URL: string
 }
 
 interface ImportMeta {

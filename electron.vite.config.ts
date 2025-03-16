@@ -7,7 +7,6 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig(({ mode, command }) => {
   const env = loadEnv(mode)
-  console.log(env)
 
   return {
     main: {
@@ -23,17 +22,6 @@ export default defineConfig(({ mode, command }) => {
         }
       },
       plugins: [react()],
-      server: {
-        proxy: {
-          '/api/user': {
-            // target: 'http://localhost:4001',
-            // target: 'http://api.flarecast.com/user',
-            target: env.VITE_USER_SERVICE_URL,
-            changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/api\/user/, '/api')
-          }
-        }
-      },
       build: {
         rollupOptions: {
           input: {

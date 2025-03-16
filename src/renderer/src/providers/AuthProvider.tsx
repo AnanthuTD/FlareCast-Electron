@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           which will validate the refresh token and set the new one in the cookie for further requests and send back the 
           accessToken and user data
         */
-        const res = await axios.post('api/user/auth/post-login', {
+        const res = await axios.post(`${import.meta.env.VITE_USER_SERVICE_URL}/auth/post-login`, {
           refreshToken: data.refreshToken
         })
 
@@ -52,7 +52,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     async function checkAuthorizedUser() {
       try {
-        const { data } = await axiosInstance.get('/api/user/auth/check-authentication')
+        const { data } = await axiosInstance.get(
+          `${import.meta.env.VITE_USER_SERVICE_URL}/auth/check-authentication`
+        )
 
         if (data.user) {
           setUser(data.user)
