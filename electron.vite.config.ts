@@ -22,6 +22,20 @@ export default defineConfig(({ mode, command }) => {
         }
       },
       plugins: [react()],
+      server: {
+        proxy: {
+          '/api/user': {
+            target: env.VITE_USER_SERVICE_URL,
+            changeOrigin: true,
+            rewrite: (path) => path.replace(/^\/api\/user/, '/api')
+          },
+          '/api/video': {
+            target: env.VITE_VIDEO_SERVICE_URL,
+            changeOrigin: true,
+            rewrite: (path) => path.replace(/^\/api\/video/, '/api')
+          }
+        }
+      },
       build: {
         rollupOptions: {
           input: {

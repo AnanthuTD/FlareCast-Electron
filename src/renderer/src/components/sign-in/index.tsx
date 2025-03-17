@@ -9,9 +9,7 @@ function SignIn() {
   }
 
   const handleSignUp = () => {
-    const SignUpURL = `${
-      import.meta.env.VITE_SIGNUP_URL
-    }?callbackUrl=flarecast://app/auth/success`
+    const SignUpURL = `${import.meta.env.VITE_SIGNUP_URL}?callbackUrl=flarecast://app/auth/success`
 
     window.open(SignUpURL, '_blank')
   }

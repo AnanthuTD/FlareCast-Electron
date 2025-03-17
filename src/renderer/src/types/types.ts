@@ -1,10 +1,20 @@
-export enum SubscriptionPlan {
-  PRO = 'PRO',
-  FREE = 'FREE'
-}
-
-export interface Subscription {
-  plan: SubscriptionPlan
+export interface SubscriptionPlan {
+  id: string
+  planId: string
+  name: string
+  price: number
+  interval: number
+  period: 'daily' | 'weekly' | 'monthly' | 'quarterly' | 'yearly'
+  maxRecordingDuration?: number
+  hasAiFeatures: boolean
+  allowsCustomBranding: boolean
+  hasAdvancedEditing: boolean
+  maxMembers?: number
+  maxVideoCount?: number
+  maxWorkspaces?: number
+  isActive: boolean
+  createdAt: string
+  updatedAt: string
 }
 
 export interface Studio {
@@ -21,7 +31,7 @@ export interface User {
   firstName: string | null
   lastName: string | null
   createdAt: Date
-  // subscription: Subscription | null
+  plan: SubscriptionPlan | null
   studio: Studio | null
 }
 

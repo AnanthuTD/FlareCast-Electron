@@ -7,8 +7,12 @@ import linuxIcon from '../../resources/icons/png/512x512.png?asset'
 import { handleDeepLink } from './handleDeepLink'
 import { handleRendererEvents } from './handleRendererEvents'
 import handleMediaEvents from './handleMediaEvents'
+import ffmpeg from 'fluent-ffmpeg'
+import { Readable } from 'stream'
 
 const PROTOCOL_NAME = 'flarecast'
+let ffmpegProcess: ffmpeg.FfmpegCommand | null = null
+let readableStream: Readable | null = null
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
@@ -124,12 +128,15 @@ function createWindow(): void {
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       sandbox: false,
-      devTools: true
+      devTools: true,
+      nodeIntegration: true
     },
     transparent: true,
     skipTaskbar: true,
     icon: getIconPath()
   })
+
+  studio.webContents.openDevTools()
 
   mainWindow.visibleOnAllWorkspaces = true
   studio.visibleOnAllWorkspaces = true
@@ -218,6 +225,37 @@ ipcMain.on('hide:plugin', (_event, payload) => {
 ipcMain.on('webcam:change', (_event, payload) => {
   console.log('webcam:change', payload)
   floatingWebCam.webContents.send('webcam:onChange', payload)
+})
+
+ipcMain.handle('start-rtmp-stream', async (_event, { rtmpUrl }) => {
+  if (ffmpegProcess) return 'Stream already running'
+
+  readableStream = new Readable({ read() {} })
+  ffmpegProcess = ffmpeg(readableStream)
+    .inputFormat('webm') // Input is WebM chunks from MediaRecorder
+    .inputOptions(['-re']) // Real-time streaming
+    .outputOptions(['-c:v', 'libx264', '-c:a', 'aac', '-f', 'flv']) // FLV for RTMP
+    .output(rtmpUrl)
+    .on('start', () => console.log('RTMP streaming started to:', rtmpUrl))
+    .on('error', (err) => console.error('RTMP streaming error:', err))
+    .on('end', () => console.log('RTMP streaming ended'))
+    .run()
+
+  return 'RTMP stream started'
+})
+
+ipcMain.handle('send-video-chunk', async (_event, chunk: Uint8Array) => {
+  if (!readableStream) return 'Stream not initialized'
+  readableStream.push(Buffer.from(chunk))
+  return 'Chunk sent'
+})
+
+ipcMain.handle('stop-rtmp-stream', async () => {
+  if (!ffmpegProcess || !readableStream) return 'No stream running'
+  readableStream.push(null) // Signal EOF
+  ffmpegProcess = null
+  readableStream = null
+  return 'RTMP stream stopped'
 })
 
 // In this file you can include the rest of your app"s specific main process

@@ -22,7 +22,7 @@ function DeviceSelector() {
   const [selectedMic, setSelectedMic] = useState<MediaDeviceInfo | null>(null)
   const [selectedCam, setSelectedCam] = useState<MediaDeviceInfo | null>(null)
 
-/*   useEffect(() => {
+  /*   useEffect(() => {
     const fetchMediaSources = async () => {
       try {
         const mediaSources = await getMediaSources()
@@ -82,8 +82,10 @@ function DeviceSelector() {
   }, [selectedMic, selectedScreen])
 
   useEffect(() => {
+    if (!selectedCam) return
+    window.api.webcam.open()
     window.api.webcam.changeWebcam(selectedCam?.deviceId)
-  }, [selectedMic, selectedScreen, selectedCam])
+  }, [selectedCam])
 
   const NoScreenOption = {
     label: 'No Screen',

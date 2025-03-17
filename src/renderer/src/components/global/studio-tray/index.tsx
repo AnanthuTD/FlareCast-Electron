@@ -1,72 +1,104 @@
-import { onStopRecording, saveVideo, selectSources, startRecording } from '@renderer/lib/recorder'
+import { onStopRecording, selectSources, startRecording } from '@renderer/lib/recorder'
 import { cn, videoRecordingTime } from '@renderer/lib/utils'
-import { Cast, Pause, Square } from 'lucide-react'
+import { Cast, Pause, RadioIcon, Square } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
 import { Sources } from 'src/types/types'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger
+} from '@renderer/components/ui/tooltip'
+import { canRecord } from '@renderer/lib/services'
+import { toast } from 'sonner'
 
 const StudioTray = () => {
   const [preview, setPreview] = useState(false)
   const [recording, setRecording] = useState(false)
   const [onTimer, setOnTimer] = useState('00:00:00')
-  const [count, setCount] = useState(0)
   const [onSources, setOnSources] = useState<Sources | undefined>(undefined)
+  const [isLive, setIsLive] = useState(false)
 
   const videoElement = useRef<HTMLVideoElement | null>(null)
-  const initialTime = new Date()
+  const recordingStartTime = useRef<number | null>(null) // Track start time per recording
 
   useEffect(() => {
-    const unsub = window.api.studio.onSourceReceived((profile) => {
-      if (JSON.stringify(profile) === JSON.stringify(onSources)) {
-        return;
-      }
-      console.log(profile)
+    const unsub = window.api.studio.onSourceReceived((profile: Sources) => {
+      if (JSON.stringify(profile) === JSON.stringify(onSources)) return
+      console.log('Received sources:', profile)
       setOnSources(profile)
     })
 
-    return () => {
-      unsub()
-    }
-  }, [])
+    return () => unsub()
+  }, [onSources])
 
   const clearTime = () => {
-    setCount(0)
     setOnTimer('00:00:00')
+    recordingStartTime.current = null
   }
 
   useEffect(() => {
-    console.log('videoElement: ', videoElement)
-    if (onSources && onSources.screen) {
-      selectSources(onSources, videoElement)
-    }
-    return () => {
-      selectSources(onSources!, videoElement)
-    }
+    if (!onSources || !videoElement.current) return
+    selectSources(onSources, videoElement).catch((err) =>
+      console.error('Failed to select sources:', err)
+    )
   }, [onSources])
 
   useEffect(() => {
-    if (!recording) return
+    if (!recording) {
+      clearTime()
+      return
+    }
 
+    recordingStartTime.current = Date.now()
     const recordTimeInterval = setInterval(() => {
-      const time = count + (new Date().getTime() - initialTime.getTime())
-      setCount(time)
-      const recordingTime = videoRecordingTime(time)
-      if (onSources?.plan === 'FREE' && recordingTime.minutes === '05') {
+      if (!recordingStartTime.current) return
+      const elapsed = Date.now() - recordingStartTime.current
+      const recordingTime = videoRecordingTime(elapsed)
+      setOnTimer(recordingTime.length)
+
+      const maxDuration = onSources?.plan?.maxRecordingDuration ?? 5
+      if (elapsed / 60000 >= maxDuration) {
+        // Convert ms to minutes
         setRecording(false)
         clearTime()
         onStopRecording()
+        // saveVideo().catch((err) => console.error('Save video failed:', err))
       }
+    }, 1000) // Update every second
 
-      setOnTimer(recordingTime.length)
-      if (time <= 0) {
-        setOnTimer('00:00:00')
-        clearInterval(recordTimeInterval)
-      }
-    }, 1)
+    return () => clearInterval(recordTimeInterval)
+  }, [recording, onSources])
 
-    return () => {
-      clearInterval(recordTimeInterval)
+  const handleStartRecording = async () => {
+    if (!onSources) return
+    try {
+      /* const hasPermission = await canRecord()
+      if (hasPermission) {
+        console.log('Recording allowed')
+      } else {
+        toast.error('Recording not allowed')
+        console.log('Recording not allowed')
+        return
+      } */
+
+      startRecording(onSources, isLive)
+      setRecording(true)
+    } catch (err) {
+      console.error('Start recording failed:', err)
     }
-  }, [recording])
+  }
+
+  const handleStopRecording = async () => {
+    try {
+      onStopRecording()
+      // await saveVideo()
+      setRecording(false)
+      clearTime()
+    } catch (err) {
+      console.error('Stop recording failed:', err)
+    }
+  }
 
   return !onSources ? (
     <></>
@@ -79,14 +111,9 @@ const StudioTray = () => {
       />
       <div className="rounded-full flex justify-around items-center h-11 w-full border-2 bg-[#171717] draggable border-white/40">
         <div
-          {...(onSources && {
-            onClick: () => {
-              setRecording(true)
-              startRecording(onSources)
-            }
-          })}
+          onClick={handleStartRecording}
           className={cn(
-            'non-draggable rouded-full cursor-pointer relative hover:opacity-80',
+            'non-draggable rounded-full cursor-pointer relative hover:opacity-80',
             recording ? 'bg-red-500 w-6 h-6' : 'bg-red-400 w-8 h-8'
           )}
         >
@@ -97,18 +124,13 @@ const StudioTray = () => {
           )}
         </div>
         {!recording ? (
-          <Pause className="non-draggable opacity-50 " size={32} fill="white" stroke="none" />
+          <Pause className="non-draggable opacity-50" size={32} fill="white" stroke="none" />
         ) : (
           <Square
             size={32}
             className="non-draggable cursor-pointer hover:scale-110 transform transition duration-150"
             fill="white"
-            onClick={() => {
-              setRecording(false)
-              clearTime()
-              onStopRecording()
-              saveVideo()
-            }}
+            onClick={handleStopRecording}
             stroke="white"
           />
         )}
@@ -124,6 +146,23 @@ const StudioTray = () => {
           className="non-draggable cursor-pointer hover:opacity-60"
           stroke="white"
         />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild className="non-draggable cursor-pointer hover:opacity-60">
+              <RadioIcon
+                onClick={() => !recording && setIsLive((prev) => !prev)}
+                className={cn(
+                  isLive ? 'text-red-600' : 'text-gray-500',
+                  recording ? 'hover:cursor-not-allowed' : ''
+                )}
+                aria-label="go live"
+              />
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Go Live</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   )

@@ -44,7 +44,7 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true
 
       try {
-        await axios.get(`${import.meta.env.VITE_USER_SERVICE_URL}/auth/refresh-token`)
+        await axios.get(`/api/user/auth/refresh-token`)
 
         onTokenRefreshed()
       } catch (refreshError) {

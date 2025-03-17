@@ -5,6 +5,8 @@ interface ImportMetaEnv {
   readonly VITE_APP_URL: string
   readonly VITE_SOCKET_URL: string
   readonly VITE_USER_SERVICE_URL: string
+  readonly VITE_VIDEO_SERVICE_URL: string
+  readonly VITE_RTMP_URL: string
 }
 
 interface ImportMeta {

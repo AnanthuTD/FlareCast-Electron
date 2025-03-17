@@ -44,6 +44,7 @@ const api = {
     sendMediaSources: async (sources) => ipcRenderer.send('media:sources', sources)
   },
   studio: {
+    open: () => ipcRenderer.send('open:studio'),
     hidePluginWindow: (state: boolean) => {
       ipcRenderer.send('hide:plugin', { state })
     },
@@ -59,6 +60,7 @@ const api = {
     }
   },
   webcam: {
+    open: () => ipcRenderer.send('open:webcam'),
     onWebcamChange: (callback) => {
       const listener = (_event: Electron.IpcRendererEvent, webcam) => {
         callback(webcam)
@@ -69,6 +71,11 @@ const api = {
     changeWebcam: (webcamId) => {
       if (webcamId) ipcRenderer.send('webcam:change', webcamId)
     }
+  },
+  liveStream: {
+    startRtmpStream: (rtmpUrl: string) => ipcRenderer.invoke('start-rtmp-stream', { rtmpUrl }),
+    sendVideoChunk: (chunk: Uint8Array) => ipcRenderer.invoke('send-video-chunk', chunk),
+    stopRtmpStream: () => ipcRenderer.invoke('stop-rtmp-stream')
   }
 } satisfies Window['api']
 

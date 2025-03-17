@@ -1,4 +1,5 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
+import { SubscriptionPlan } from '../renderer/src/types/types'
 
 interface AuthApis {
   onAuthSuccess: (callback: (data: { refreshToken: string }) => void) => void
@@ -13,7 +14,7 @@ interface WindowApis {
 interface Sources {
   screen?: string
   audio?: string
-  // plan: 'PRO' | 'FREE'
+  plan: SubscriptionPlan
   id: string
 }
 
@@ -24,14 +25,22 @@ interface MediaApis {
 }
 
 interface StudioApis {
+  open: () => void
   hidePluginWindow: (state: boolean) => void
   onSourceReceived: (callback: (profile: Sources) => void) => void
   resize: (shrink: boolean) => void
 }
 
 interface WebcamApis {
+  open: () => void
   changeWebcam: (webcamId: string | undefined) => void
   onWebcamChange: (callback: (webcamId: string) => void) => () => Electron.IpcRenderer
+}
+
+interface LiveStreamApis {
+  startRtmpStream: (rtmpUrl: string) => Promise<any>
+  stopRtmpStream: () => Promise<any>;
+  sendVideoChunk: (chunk: Uint8Array) => Promise<any>
 }
 
 interface ApiTypes {
@@ -40,6 +49,7 @@ interface ApiTypes {
   media: MediaApis
   studio: StudioApis
   webcam: WebcamApis
+  liveStream: LiveStreamApis
 }
 
 declare global {
