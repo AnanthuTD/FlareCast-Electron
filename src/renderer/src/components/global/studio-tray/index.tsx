@@ -73,14 +73,14 @@ const StudioTray = () => {
   const handleStartRecording = async () => {
     if (!onSources) return
     try {
-      /* const hasPermission = await canRecord()
+      const hasPermission = await canRecord()
       if (hasPermission) {
         console.log('Recording allowed')
       } else {
         toast.error('Recording not allowed')
         console.log('Recording not allowed')
         return
-      } */
+      }
 
       startRecording(onSources, isLive)
       setRecording(true)

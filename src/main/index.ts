@@ -93,7 +93,7 @@ function createWindow(): void {
     icon: getIconPath()
   })
 
-  mainWindow.setContentProtection(true)
+  // mainWindow.setContentProtection(true)
 
   studio = new BrowserWindow({
     width: 300,
@@ -114,7 +114,7 @@ function createWindow(): void {
     icon: getIconPath()
   })
 
-  studio.setContentProtection(true)
+  // studio.setContentProtection(true)
 
   floatingWebCam = new BrowserWindow({
     width: 200,
@@ -136,7 +136,7 @@ function createWindow(): void {
     icon: getIconPath()
   })
 
-  studio.webContents.openDevTools()
+  // studio.webContents.openDevTools()
 
   mainWindow.visibleOnAllWorkspaces = true
   studio.visibleOnAllWorkspaces = true

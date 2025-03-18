@@ -10,9 +10,19 @@ let userId: string
 let rtmpUrl = import.meta.env.VITE_RTMP_URL
 let isLive = false
 
+const getAccessTokenFromCookie = () => {
+  const cookies = document.cookie.split('; ')
+  const accessTokenCookie = cookies.find((cookie) => cookie.startsWith('accessToken='))
+  return accessTokenCookie ? accessTokenCookie.split('=')[1] : null
+}
+
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   path: import.meta.env.VITE_SOCKET_URL_PATH,
-  transports: ['websocket']
+  transports: ['websocket'],
+  auth: {
+    token: getAccessTokenFromCookie()
+  },
+  withCredentials: true
 })
 
 export const startRecording = async (

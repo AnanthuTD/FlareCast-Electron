@@ -26,12 +26,20 @@ export async function apiRequest<T>(request: Promise<AxiosResponse<T>>): Promise
 
 // Updated canRecord using the utility
 export async function canRecord(): Promise<boolean> {
-  const result = await apiRequest(axiosInstance.get(`/api/user/upload-permission`))
+  const result: {
+    data: {
+      message: string
+      permission: string
+      maxVideoCount: number | null
+      totalVideoUploaded: number
+    }
+    error: boolean
+  } = await apiRequest(axiosInstance.get(`/api/user/upload-permission`))
   if (result.error) {
     return false // Return false if there's an error
   }
   // Handle the response data
-  return typeof result.data === 'boolean' ? result.data : result.data?.canUpload || false
+  return result.data.permission === 'granted'
 }
 
 export async function getStreamToken(): Promise<{ token; streamKey }> {
