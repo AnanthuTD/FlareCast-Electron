@@ -37,7 +37,7 @@ if (!gotTheLock) {
       mainWindow.focus()
     }
     const Url = commandLine.pop() as string
-    handleDeepLink(mainWindow, new URL(Url))
+    handleDeepLink(mainWindow, studio, new URL(Url))
   })
 
   app.whenReady().then(() => {
@@ -61,7 +61,7 @@ if (!gotTheLock) {
   app.on('open-url', (event, url) => {
     event.preventDefault()
     dialog.showErrorBox('Welcome Back', `You arrived from: ${url}`)
-    handleDeepLink(mainWindow, new URL(url))
+    handleDeepLink(mainWindow, studio, new URL(url))
   })
 }
 

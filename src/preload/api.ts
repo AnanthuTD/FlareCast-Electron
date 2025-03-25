@@ -1,5 +1,6 @@
 import { ipcRenderer } from 'electron'
 import { AppEvents } from '../main/events'
+import { PresetSetCallbackProps } from '../types/types'
 
 const api = {
   auth: {
@@ -50,6 +51,7 @@ const api = {
     },
     onSourceReceived: (callback) => {
       const listener = (_event: Electron.IpcRendererEvent, profile) => {
+        console.log('onSourceReceived')
         callback(profile)
       }
       ipcRenderer.on('profile:received', listener)
@@ -76,6 +78,21 @@ const api = {
     startRtmpStream: (rtmpUrl: string) => ipcRenderer.invoke('start-rtmp-stream', { rtmpUrl }),
     sendVideoChunk: (chunk: Uint8Array) => ipcRenderer.invoke('send-video-chunk', chunk),
     stopRtmpStream: () => ipcRenderer.invoke('stop-rtmp-stream')
+  },
+  preset: {
+    set: (callback: (data: PresetSetCallbackProps) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, data: PresetSetCallbackProps) => {
+        console.log('triggered: ', data)
+        if (data) {
+          console.log('Received preset:', data)
+          callback(data)
+        } else {
+          console.error('Data not received from deeplink invocation', data)
+        }
+      }
+      ipcRenderer.on(AppEvents.SET_PRESET, listener)
+      return () => ipcRenderer.removeListener(AppEvents.SET_PRESET, listener)
+    }
   }
 } satisfies Window['api']
 

@@ -1,7 +1,6 @@
 import React from 'react'
 import { AuthProvider } from './providers/AuthProvider'
 import ControlLayout from './layouts/ControlLayout'
-import { ThemeProvider } from './providers/theme-provider'
 import DeviceSelector from './components/global/device-selector'
 import { Toaster } from 'sonner'
 

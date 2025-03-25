@@ -34,7 +34,7 @@ export async function canRecord(): Promise<boolean> {
       totalVideoUploaded: number
     }
     error: boolean
-  } = await apiRequest(axiosInstance.get(`/api/user/upload-permission`))
+  } = await apiRequest(axiosInstance.get(`/api/user/limits/upload-permission`))
   if (result.error) {
     return false // Return false if there's an error
   }
@@ -42,7 +42,13 @@ export async function canRecord(): Promise<boolean> {
   return result.data.permission === 'granted'
 }
 
-export async function getStreamToken(): Promise<{ token; streamKey }> {
-  const { data } = await axiosInstance.get(`/api/video/stream-key`)
+export async function getStreamToken(props: {
+  workspaceId: string
+  folderId: string
+  spaceId: string
+}): Promise<{ token; streamKey } | null> {
+  const { data } = await axiosInstance.get(`/api/video/stream-key`, {
+    params: props
+  })
   return data
 }

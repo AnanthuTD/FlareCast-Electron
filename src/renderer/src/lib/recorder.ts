@@ -1,6 +1,6 @@
 import React from 'react'
 import { io } from 'socket.io-client'
-import { Sources } from 'src/types/types'
+import { PresetSetCallbackProps, Sources } from 'src/types/types'
 import { v4 as uuid } from 'uuid'
 import { getStreamToken } from './services'
 
@@ -9,6 +9,7 @@ let mediaRecorder: MediaRecorder | undefined
 let userId: string
 let rtmpUrl = import.meta.env.VITE_RTMP_URL
 let isLive = false
+let preset: { workspaceId: string; spaceId: string; folderId: string } | null = null
 
 const getAccessTokenFromCookie = () => {
   const cookies = document.cookie.split('; ')
@@ -27,8 +28,14 @@ const socket = io(import.meta.env.VITE_SOCKET_URL, {
 
 export const startRecording = async (
   onSources: { screen: string; audio: string; id: string },
+  p: typeof preset,
   isLiveParams: boolean
 ) => {
+  console.log('preset', p)
+  if (p) {
+    preset = p
+  }
+
   if (!mediaRecorder) return
   isLive = isLiveParams
 
@@ -36,8 +43,15 @@ export const startRecording = async (
   videoTransferFileName = `${uuid()}-${onSources.id.slice(0, 8)}.webm`
 
   if (isLive) {
-    const { token, streamKey } = await getStreamToken()
-    rtmpUrl = `${import.meta.env.VITE_RTMP_URL}/${streamKey}`
+    console.log('live: ' + isLive)
+    const data = await getStreamToken(preset)
+    if (!data) {
+      stopRecording()
+      return
+    }
+
+
+    rtmpUrl = `${import.meta.env.VITE_RTMP_URL}/${data.streamKey}`
     await window.api.liveStream.startRtmpStream(rtmpUrl) // Start RTMP in main process
     mediaRecorder.start(100) // 100ms chunks for lower latency
   } else {
@@ -81,7 +95,8 @@ export const onDataAvailable = async (e: BlobEvent) => {
       socket.emit('video:chunks', {
         chunks: buffer,
         fileName: videoTransferFileName,
-        count: ++count
+        count: ++count,
+        preset
       })
     }
     reader.readAsArrayBuffer(e.data)
@@ -101,16 +116,18 @@ export const saveVideo = () => {
 }
 
 export const stopRecording = () => {
-  if (!isStopped || !mediaRecorder) return
+  if (!isStopped || !mediaRecorder || isLive) return
 
   window.api.studio.hidePluginWindow(false)
   socket.emit('process:video', {
     fileName: videoTransferFileName,
-    userId
+    userId,
+    preset
   })
   isStopped = false
   recordedBlobs.length = 0
   count = 0
+  preset = null
 }
 
 export const selectSources = async (

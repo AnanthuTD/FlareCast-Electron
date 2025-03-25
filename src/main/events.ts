@@ -17,5 +17,7 @@ export enum AppEvents {
 
   // Authentication
   AUTHENTICATION_SUCCESS = 'authentication:success',
-  AUTHENTICATION_FAILURE = 'authentication:failure'
+  AUTHENTICATION_FAILURE = 'authentication:failure',
+
+  SET_PRESET = 'set:preset'
 }

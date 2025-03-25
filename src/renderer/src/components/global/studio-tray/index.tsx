@@ -2,7 +2,7 @@ import { onStopRecording, selectSources, startRecording } from '@renderer/lib/re
 import { cn, videoRecordingTime } from '@renderer/lib/utils'
 import { Cast, Pause, RadioIcon, Square } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { Sources } from 'src/types/types'
+import { Preset, PresetSetCallbackProps, Sources } from 'src/types/types'
 import {
   Tooltip,
   TooltipContent,
@@ -18,9 +18,10 @@ const StudioTray = () => {
   const [onTimer, setOnTimer] = useState('00:00:00')
   const [onSources, setOnSources] = useState<Sources | undefined>(undefined)
   const [isLive, setIsLive] = useState(false)
+  const [preset, setPreset] = useState<null | PresetSetCallbackProps>(null)
 
   const videoElement = useRef<HTMLVideoElement | null>(null)
-  const recordingStartTime = useRef<number | null>(null) // Track start time per recording
+  const recordingStartTime = useRef<number | null>(null)
 
   useEffect(() => {
     const unsub = window.api.studio.onSourceReceived((profile: Sources) => {
@@ -29,8 +30,18 @@ const StudioTray = () => {
       setOnSources(profile)
     })
 
-    return () => unsub()
-  }, [onSources])
+    return unsub
+  }, [])
+
+  useEffect(() => {
+    const unsub = window.api.preset.set((data) => {
+      console.log('Received preset:', data)
+
+      setPreset(data)
+    })
+
+    return unsub
+  }, [setPreset, preset])
 
   const clearTime = () => {
     setOnTimer('00:00:00')
@@ -82,7 +93,9 @@ const StudioTray = () => {
         return
       }
 
-      startRecording(onSources, isLive)
+      console.log('isLive recording: ', isLive)
+
+      startRecording(onSources, preset, isLive)
       setRecording(true)
     } catch (err) {
       console.error('Start recording failed:', err)
@@ -91,6 +104,7 @@ const StudioTray = () => {
 
   const handleStopRecording = async () => {
     try {
+      setPreset(null)
       onStopRecording()
       // await saveVideo()
       setRecording(false)

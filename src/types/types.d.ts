@@ -27,7 +27,7 @@ interface MediaApis {
 interface StudioApis {
   open: () => void
   hidePluginWindow: (state: boolean) => void
-  onSourceReceived: (callback: (profile: Sources) => void) => void
+  onSourceReceived: (callback: (profile: Sources) => void) => () => void
   resize: (shrink: boolean) => void
 }
 
@@ -39,8 +39,17 @@ interface WebcamApis {
 
 interface LiveStreamApis {
   startRtmpStream: (rtmpUrl: string) => Promise<any>
-  stopRtmpStream: () => Promise<any>;
+  stopRtmpStream: () => Promise<any>
   sendVideoChunk: (chunk: Uint8Array) => Promise<any>
+}
+
+interface PresetSetCallbackProps {
+  workspaceId: string
+  folderId: string
+  spaceId: string
+}
+interface Preset {
+  set: (callback: (data: PresetSetCallbackProps) => void) => () => void;
 }
 
 interface ApiTypes {
@@ -50,6 +59,7 @@ interface ApiTypes {
   studio: StudioApis
   webcam: WebcamApis
   liveStream: LiveStreamApis
+  preset: Preset
 }
 
 declare global {
