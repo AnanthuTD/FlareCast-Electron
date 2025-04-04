@@ -27,7 +27,6 @@ jobs:
         with:
           envkey_VITE_SIGNIN_URL: ${{ secrets.VITE_SIGNIN_URL }}
           envkey_VITE_SIGNUP_URL: ${{ secrets.VITE_SIGNUP_URL }}
-          envkey_VITE_APP_URL: ${{ secrets.VITE_APP_URL }}
           envkey_VITE_SOCKET_URL: ${{ secrets.VITE_SOCKET_URL }}
           envkey_VITE_SOCKET_URL_PATH: ${{ secrets.VITE_SOCKET_URL_PATH }}
           envkey_VITE_USER_SERVICE_URL: ${{ secrets.VITE_USER_SERVICE_URL }}

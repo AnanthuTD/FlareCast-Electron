@@ -1,17 +1,11 @@
-import axiosInstance from '../axios/index'
+import axiosInstance, { publicAxiosInstance } from '../axios/index'
 import { AxiosResponse, AxiosError } from 'axios'
 
-// Define a generic response type
 interface ApiResponse<T> {
   data: T | null
   error: string | null
 }
 
-/**
- * Generic API request wrapper
- * @param request - Axios request promise
- * @returns ApiResponse with data or error
- */
 export async function apiRequest<T>(request: Promise<AxiosResponse<T>>): Promise<ApiResponse<T>> {
   try {
     const response = await request
@@ -24,31 +18,48 @@ export async function apiRequest<T>(request: Promise<AxiosResponse<T>>): Promise
   }
 }
 
-// Updated canRecord using the utility
-export async function canRecord(): Promise<boolean> {
-  const result: {
-    data: {
-      message: string
-      permission: string
-      maxVideoCount: number | null
-      totalVideoUploaded: number
-    }
-    error: boolean
-  } = await apiRequest(axiosInstance.get(`/api/user/limits/upload-permission`))
+export async function postLogin(refreshToken: string) {
+  const result = await apiRequest(
+    publicAxiosInstance.post(`/user/api/auth/post-login`, { refreshToken })
+  )
   if (result.error) {
-    return false // Return false if there's an error
+    return null
   }
-  // Handle the response data
+
+  const { user, accessToken, refreshToken: newRefreshToken } = result.data // Extract both tokens
+  if (accessToken && newRefreshToken) {
+    // Send both tokens to main process
+    await window.electron.ipcRenderer.invoke('store-tokens', {
+      accessToken,
+      refreshToken: newRefreshToken
+    })
+  }
+  return user
+}
+
+export async function canRecord(): Promise<boolean> {
+  const result = await apiRequest(axiosInstance.get(`/user/api/limits/upload-permission`))
+  if (result.error) {
+    return false
+  }
   return result.data.permission === 'granted'
 }
 
-export async function getStreamToken(props: {
+export async function getStreamToken(props?: {
   workspaceId: string
   folderId: string
   spaceId: string
 }): Promise<{ token; streamKey } | null> {
-  const { data } = await axiosInstance.get(`/api/video/stream-key`, {
-    params: props
-  })
+  const { data } = await axiosInstance.get(`/video/api/stream-key`, { params: props })
   return data
+}
+
+export async function checkAuthentication() {
+  const { data } = await axiosInstance.get(`/user/api/profile`)
+  return data
+}
+
+export async function logout() {
+  await window.electron.ipcRenderer.invoke('clear-tokens')
+  window.location.href = '/signin'
 }

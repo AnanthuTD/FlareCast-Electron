@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { UserState, useUserStore } from '@renderer/stores/userStore'
-import axios from 'axios'
-import axiosInstance from '@renderer/axios'
 import SignIn from '@renderer/components/sign-in'
+import { checkAuthentication, postLogin } from '@renderer/lib/services'
 
 interface AuthContextType {
   errorMessage: string | null
@@ -29,13 +28,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           which will validate the refresh token and set the new one in the cookie for further requests and send back the 
           accessToken and user data
         */
-        const res = await axios.post(`/api/user/auth/post-login`, {
-          refreshToken: data.refreshToken
-        })
+        const user = await postLogin(data.refreshToken)
 
-        if (res.data.user) {
-          console.log('User data:', res.data.user)
-          setUser(res.data.user as UserState)
+        if (user) {
+          console.log('User data:', user)
+          setUser(user as UserState)
         }
 
         setErrorMessage(null)
@@ -52,9 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     async function checkAuthorizedUser() {
       try {
-        const { data } = await axiosInstance.get(
-          `/api/user/auth/check-authentication`
-        )
+        const data = await checkAuthentication()
 
         if (data.user) {
           setUser(data.user)

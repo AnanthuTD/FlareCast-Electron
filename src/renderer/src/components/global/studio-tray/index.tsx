@@ -1,15 +1,20 @@
-import { onStopRecording, selectSources, startRecording } from '@renderer/lib/recorder'
+import {
+  checkWebsocketConnection,
+  onStopRecording,
+  selectSources,
+  startRecording
+} from '@renderer/lib/recorder'
 import { cn, videoRecordingTime } from '@renderer/lib/utils'
 import { Cast, Pause, RadioIcon, Square } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { Preset, PresetSetCallbackProps, Sources } from 'src/types/types'
+import { PresetSetCallbackProps, Sources } from 'src/types/types'
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger
 } from '@renderer/components/ui/tooltip'
-import { canRecord } from '@renderer/lib/services'
+import { canRecord, getStreamToken } from '@renderer/lib/services'
 import { toast } from 'sonner'
 
 const StudioTray = () => {
@@ -83,6 +88,24 @@ const StudioTray = () => {
 
   const handleStartRecording = async () => {
     if (!onSources) return
+    let streamKey = ''
+
+    if (!isLive) {
+      const socketConnected = checkWebsocketConnection()
+      if (!socketConnected) {
+        console.log('WebSocket connection not established')
+        // setTimeout(() => checkWebsocketConnection(), 5000)
+        return
+      }
+    } else {
+      const data = await getStreamToken(preset)
+      if (!data) {
+        console.log('Failed to get stream token')
+        return
+      }
+      streamKey = data.streamKey
+    }
+
     try {
       const hasPermission = await canRecord()
       if (hasPermission) {
@@ -95,7 +118,7 @@ const StudioTray = () => {
 
       console.log('isLive recording: ', isLive)
 
-      startRecording(onSources, preset, isLive)
+      startRecording(onSources, preset, isLive, streamKey)
       setRecording(true)
     } catch (err) {
       console.error('Start recording failed:', err)

@@ -1,8 +1,7 @@
 import React from 'react'
 import { io } from 'socket.io-client'
-import { PresetSetCallbackProps, Sources } from 'src/types/types'
+import { Sources } from 'src/types/types'
 import { v4 as uuid } from 'uuid'
-import { getStreamToken } from './services'
 
 let videoTransferFileName: string | undefined
 let mediaRecorder: MediaRecorder | undefined
@@ -11,25 +10,46 @@ let rtmpUrl = import.meta.env.VITE_RTMP_URL
 let isLive = false
 let preset: { workspaceId: string; spaceId: string; folderId: string } | null = null
 
-const getAccessTokenFromCookie = () => {
-  const cookies = document.cookie.split('; ')
-  const accessTokenCookie = cookies.find((cookie) => cookie.startsWith('accessToken='))
-  return accessTokenCookie ? accessTokenCookie.split('=')[1] : null
+const getAccessTokenFromCookie = async () => {
+  // const cookies = document.cookie.split('; ')
+  // const accessTokenCookie = cookies.find((cookie) => cookie.startsWith('accessToken='))
+  // return accessTokenCookie ? accessTokenCookie.split('=')[1] : null
+  return await window.electron.ipcRenderer.invoke('get-access-token')
 }
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   path: import.meta.env.VITE_SOCKET_URL_PATH,
   transports: ['websocket'],
   auth: {
-    token: getAccessTokenFromCookie()
+    token: await getAccessTokenFromCookie()
   },
   withCredentials: true
 })
 
+socket.on('connect', () => {
+  console.log('Connected to socket: ' + socket.id)
+})
+
+export const checkWebsocketConnection = () => {
+  socket.connect()
+  if (!socket.connected) {
+    try {
+      return true
+    } catch (err) {
+      console.error('Error connecting to websocket', err)
+      return false
+    }
+  } else {
+    console.log('App is Connected to socket initially: ' + socket.id)
+  }
+  return true
+}
+
 export const startRecording = async (
   onSources: { screen: string; audio: string; id: string },
   p: typeof preset,
-  isLiveParams: boolean
+  isLiveParams: boolean,
+  streamKey: string
 ) => {
   console.log('preset', p)
   if (p) {
@@ -44,14 +64,8 @@ export const startRecording = async (
 
   if (isLive) {
     console.log('live: ' + isLive)
-    const data = await getStreamToken(preset)
-    if (!data) {
-      stopRecording()
-      return
-    }
 
-
-    rtmpUrl = `${import.meta.env.VITE_RTMP_URL}/${data.streamKey}`
+    rtmpUrl = `${import.meta.env.VITE_RTMP_URL}/${streamKey}`
     await window.api.liveStream.startRtmpStream(rtmpUrl) // Start RTMP in main process
     mediaRecorder.start(100) // 100ms chunks for lower latency
   } else {

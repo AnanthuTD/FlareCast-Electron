@@ -27,12 +27,12 @@ export default defineConfig(({ mode, command }) => {
           '/api/user': {
             target: env.VITE_USER_SERVICE_URL,
             changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/api\/user/, '/api')
+            rewrite: (path) => path.replace(/^\/api\/user/, '/')
           },
           '/api/video': {
             target: env.VITE_VIDEO_SERVICE_URL,
             changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/api\/video/, '/api')
+            rewrite: (path) => path.replace(/^\/api\/video/, '/')
           }
         }
       },

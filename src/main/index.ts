@@ -1,4 +1,4 @@
-import { app, shell, BrowserWindow, ipcMain, dialog } from 'electron'
+import { app, shell, BrowserWindow, ipcMain, dialog, session } from 'electron'
 import path, { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import winIcon from '../../resources/icons/win/icon.ico?asset'
@@ -14,6 +14,11 @@ const PROTOCOL_NAME = 'flarecast'
 let ffmpegProcess: ffmpeg.FfmpegCommand | null = null
 let readableStream: Readable | null = null
 
+let mainWindow: BrowserWindow
+let studio: BrowserWindow
+let floatingWebCam: BrowserWindow
+let store // Declare store for electron-store
+
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
     app.setAsDefaultProtocolClient(PROTOCOL_NAME, process.execPath, [path.resolve(process.argv[1])])
@@ -21,10 +26,6 @@ if (process.defaultApp) {
 } else {
   app.setAsDefaultProtocolClient(PROTOCOL_NAME)
 }
-
-let mainWindow: BrowserWindow
-let studio: BrowserWindow
-let floatingWebCam: BrowserWindow
 
 const gotTheLock = app.requestSingleInstanceLock()
 
@@ -40,8 +41,12 @@ if (!gotTheLock) {
     handleDeepLink(mainWindow, studio, new URL(Url))
   })
 
-  app.whenReady().then(() => {
+  app.whenReady().then(async () => {
     try {
+      // Dynamically import electron-store to handle ESM in CommonJS
+      const { default: Store } = await import('electron-store')
+      store = new Store()
+
       electronApp.setAppUserModelId('com.electron')
 
       app.on('browser-window-created', (_, window) => {
@@ -93,7 +98,7 @@ function createWindow(): void {
     icon: getIconPath()
   })
 
-  // mainWindow.setContentProtection(true)
+  if (is.dev) mainWindow.webContents.openDevTools()
 
   studio = new BrowserWindow({
     width: 300,
@@ -114,7 +119,7 @@ function createWindow(): void {
     icon: getIconPath()
   })
 
-  // studio.setContentProtection(true)
+  if (is.dev) studio.webContents.openDevTools()
 
   floatingWebCam = new BrowserWindow({
     width: 200,
@@ -135,8 +140,6 @@ function createWindow(): void {
     skipTaskbar: true,
     icon: getIconPath()
   })
-
-  // studio.webContents.openDevTools()
 
   mainWindow.visibleOnAllWorkspaces = true
   studio.visibleOnAllWorkspaces = true
@@ -166,16 +169,13 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     studio.loadFile(join(__dirname, '../renderer/studio.html'))
-    floatingWebCam.loadFile(join(__dirname, '../renderer/webcam.html')) // Fixed typo
+    floatingWebCam.loadFile(join(__dirname, '../renderer/webcam.html'))
   }
 
   handleRendererEvents(mainWindow)
   handleMediaEvents(mainWindow)
 }
 
-// Quit when all windows are closed, except on macOS. There, it's common
-// for applications and their menu bar to stay active until the user quits
-// explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit()
@@ -188,6 +188,100 @@ ipcMain.on('window:close', () => {
   }
 })
 
+// Token storage handlers using electron-store and cookies
+ipcMain.handle('store-tokens', async (_event, { accessToken, refreshToken }) => {
+  store.set('accessToken', accessToken)
+  store.set('refreshToken', refreshToken)
+
+  const cookies = [
+    {
+      url: 'http://localhost',
+      name: 'accessToken',
+      value: accessToken,
+      path: '/',
+      secure: true,
+      sameSite: 'no_restriction'
+    },
+    {
+      url: 'http://localhost',
+      name: 'refreshToken',
+      value: refreshToken,
+      path: '/',
+      secure: true,
+      sameSite: 'no_restriction',
+      httpOnly: true
+    }
+  ]
+
+  try {
+    await Promise.all(cookies.map((cookie) => session.defaultSession.cookies.set(cookie)))
+    console.log('Stored tokens and set cookies:', { accessToken, refreshToken })
+  } catch (error) {
+    console.error('Error setting cookies:', error)
+  }
+
+  return 'Tokens stored and cookies set'
+})
+
+ipcMain.handle('get-access-token', async () => {
+  const token = store.get('accessToken')
+  console.log('Fetched accessToken:', token)
+  return token
+})
+
+ipcMain.handle('get-refresh-token', async () => {
+  const token = store.get('refreshToken')
+  console.log('Fetched refreshToken:', token)
+  return token
+})
+
+ipcMain.handle('clear-tokens', async () => {
+  store.delete('accessToken')
+  store.delete('refreshToken')
+  try {
+    await session.defaultSession.cookies.remove('http://localhost', 'accessToken')
+    await session.defaultSession.cookies.remove('http://localhost', 'refreshToken')
+    console.log('Tokens and cookies cleared')
+  } catch (error) {
+    console.error('Error clearing cookies:', error)
+  }
+  return 'Tokens and cookies cleared'
+})
+
+// New IPC handlers for manually getting and setting cookies
+ipcMain.handle('get-cookie', async (_event, { name }) => {
+  try {
+    const cookies = await session.defaultSession.cookies.get({ name, url: 'http://localhost' })
+    const cookie = cookies[0]?.value || null
+    console.log(`Fetched cookie ${name}:`, cookie)
+    return cookie
+  } catch (error) {
+    console.error(`Error fetching cookie ${name}:`, error)
+    return null
+  }
+})
+
+ipcMain.handle('set-cookie', async (_event, { name, value }) => {
+  const cookie = {
+    url: 'http://localhost',
+    name,
+    value,
+    path: '/',
+    secure: true, // Set to false for file:// or local dev
+    sameSite: 'no_restriction',
+    httpOnly: name === 'refreshToken' ? true : false
+  }
+  try {
+    await session.defaultSession.cookies.set(cookie)
+    console.log(`Set cookie ${name}:`, value)
+    return `Cookie ${name} set`
+  } catch (error) {
+    console.error(`Error setting cookie ${name}:`, error)
+    throw error
+  }
+})
+
+// Existing IPC handlers
 ipcMain.on('media:sources', (_event, payload) => {
   try {
     studio.webContents.send('profile:received', payload)
@@ -197,23 +291,10 @@ ipcMain.on('media:sources', (_event, payload) => {
 })
 
 ipcMain.on('resize:studio', (_event, payload) => {
-  // const { x, y } = studio.getBounds() // Get the current position of the window
-  // const heightDifference = 50 // Difference in height between the two states (200 - 100)
-
   if (payload.shrink) {
-    studio.setBounds({
-      // x, // Keep the X position unchanged
-      // y: y+heightDifference, // Move the window down by the height difference
-      width: 300,
-      height: 100
-    })
+    studio.setBounds({ width: 300, height: 100 })
   } else {
-    studio.setBounds({
-      // x, // Keep the X position unchanged
-      // y: y-heightDifference,
-      width: 300,
-      height: 200
-    })
+    studio.setBounds({ width: 300, height: 200 })
   }
 })
 
@@ -229,18 +310,16 @@ ipcMain.on('webcam:change', (_event, payload) => {
 
 ipcMain.handle('start-rtmp-stream', async (_event, { rtmpUrl }) => {
   if (ffmpegProcess) return 'Stream already running'
-
   readableStream = new Readable({ read() {} })
   ffmpegProcess = ffmpeg(readableStream)
-    .inputFormat('webm') // Input is WebM chunks from MediaRecorder
-    .inputOptions(['-re']) // Real-time streaming
-    .outputOptions(['-c:v', 'libx264', '-c:a', 'aac', '-f', 'flv']) // FLV for RTMP
+    .inputFormat('webm')
+    .inputOptions(['-re'])
+    .outputOptions(['-c:v', 'libx264', '-c:a', 'aac', '-f', 'flv'])
     .output(rtmpUrl)
     .on('start', () => console.log('RTMP streaming started to:', rtmpUrl))
     .on('error', (err) => console.error('RTMP streaming error:', err))
     .on('end', () => console.log('RTMP streaming ended'))
     .run()
-
   return 'RTMP stream started'
 })
 
@@ -252,12 +331,10 @@ ipcMain.handle('send-video-chunk', async (_event, chunk: Uint8Array) => {
 
 ipcMain.handle('stop-rtmp-stream', async () => {
   if (!ffmpegProcess || !readableStream) return 'No stream running'
-  readableStream.push(null) // Signal EOF
+  readableStream.push(null)
   ffmpegProcess = null
   readableStream = null
   return 'RTMP stream stopped'
 })
 
-// In this file you can include the rest of your app"s specific main process
-// code. You can also put them in separate files and require them here.
 app.disableHardwareAcceleration()
