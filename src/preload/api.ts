@@ -7,7 +7,6 @@ const api = {
     onAuthSuccess: (callback: (data: { refreshToken: string }) => void) => {
       const listener = (_event: Electron.IpcRendererEvent, data: { refreshToken: string }) => {
         if (data && typeof data.refreshToken === 'string') {
-          // console.log('Received refresh token in preload:', data.refreshToken)
           callback(data)
         } else {
           console.error('Invalid data received for AUTHENTICATION_SUCCESS:', data)
@@ -27,64 +26,78 @@ const api = {
       }
       ipcRenderer.on(AppEvents.AUTHENTICATION_FAILURE, listener)
       return () => ipcRenderer.removeListener(AppEvents.AUTHENTICATION_FAILURE, listener)
+    },
+
+    getAccessToken: async () => {
+      const accessToken = await ipcRenderer.invoke(AppEvents.GET_ACCESS_TOKEN)
+      return accessToken as string
+    },
+
+    getRefreshToken: async () => {
+      const refreshToken = await ipcRenderer.invoke(AppEvents.GET_REFRESH_TOKEN)
+      return refreshToken as string
+    },
+
+    storeTokens: (accessToken?: string, refreshToken?: string) => {
+      ipcRenderer.invoke(AppEvents.STORE_TOKENS, { accessToken, refreshToken })
+    },
+
+    clearTokens: () => {
+      ipcRenderer.invoke(AppEvents.CLEAR_TOKENS)
     }
   },
   window: {
-    close: () => ipcRenderer.send('window:close'),
-    openWebpage: (url) => ipcRenderer.send('open:webpage', url)
+    close: () => ipcRenderer.send(AppEvents.WINDOW_CLOSE),
+    openWebpage: (url) => ipcRenderer.send(AppEvents.OPEN_WEBPAGE, url)
   },
   media: {
     getScreenStream: async () => {
-      const sources = await ipcRenderer.invoke('get-sources')
-      console.log('screen source:', sources)
+      const sources = await ipcRenderer.invoke(AppEvents.GET_SOURCES)
       return sources
     },
     getScreenCapture: async (id: string) => {
-      return await ipcRenderer.invoke('get-screen-capture', id)
+      return await ipcRenderer.invoke(AppEvents.GET_SCREEN_CAPTURE, id)
     },
-    sendMediaSources: async (sources) => ipcRenderer.send('media:sources', sources)
+    sendMediaSources: async (sources) => ipcRenderer.send(AppEvents.SEND_MEDIA_SOURCES, sources)
   },
   studio: {
-    open: () => ipcRenderer.send('open:studio'),
+    open: () => ipcRenderer.send(AppEvents.OPEN_STUDIO),
     hidePluginWindow: (state: boolean) => {
-      ipcRenderer.send('hide:plugin', { state })
+      ipcRenderer.send(AppEvents.HIDE_STUDIO_WINDOW, { state })
     },
     onSourceReceived: (callback) => {
       const listener = (_event: Electron.IpcRendererEvent, profile) => {
-        console.log('onSourceReceived')
         callback(profile)
       }
-      ipcRenderer.on('profile:received', listener)
-      return () => ipcRenderer.removeListener('profile:received', listener)
+      ipcRenderer.on(AppEvents.PROFILE_RECEIVED, listener)
+      return () => ipcRenderer.removeListener(AppEvents.PROFILE_RECEIVED, listener)
     },
     resize: (shrink) => {
-      ipcRenderer.send('resize:studio', { shrink })
+      ipcRenderer.send(AppEvents.RESIZE_STUDIO, { shrink })
     }
   },
   webcam: {
-    open: () => ipcRenderer.send('open:webcam'),
+    open: () => ipcRenderer.send(AppEvents.OPEN_WEBCAM),
     onWebcamChange: (callback) => {
       const listener = (_event: Electron.IpcRendererEvent, webcam) => {
         callback(webcam)
       }
-      ipcRenderer.on('webcam:onChange', listener)
-      return () => ipcRenderer.removeListener('webcam:change', listener)
+      ipcRenderer.on(AppEvents.WEBCAM_ON_CHANGE, listener)
+      return () => ipcRenderer.removeListener(AppEvents.WEBCAM_ON_CHANGE, listener)
     },
     changeWebcam: (webcamId) => {
-      if (webcamId) ipcRenderer.send('webcam:change', webcamId)
+      if (webcamId) ipcRenderer.send(AppEvents.WEBCAM_CHANGE, webcamId)
     }
   },
   liveStream: {
-    startRtmpStream: (rtmpUrl: string) => ipcRenderer.invoke('start-rtmp-stream', { rtmpUrl }),
-    sendVideoChunk: (chunk: Uint8Array) => ipcRenderer.invoke('send-video-chunk', chunk),
-    stopRtmpStream: () => ipcRenderer.invoke('stop-rtmp-stream')
+    startRtmpStream: (rtmpUrl: string) => ipcRenderer.invoke(AppEvents.START_STREAM, { rtmpUrl }),
+    sendVideoChunk: (chunk: Uint8Array) => ipcRenderer.invoke(AppEvents.SEND_VIDEO_CHUNK, chunk),
+    stopRtmpStream: () => ipcRenderer.invoke(AppEvents.STOP_STREAM)
   },
   preset: {
     set: (callback: (data: PresetSetCallbackProps) => void) => {
       const listener = (_event: Electron.IpcRendererEvent, data: PresetSetCallbackProps) => {
-        console.log('triggered: ', data)
         if (data) {
-          console.log('Received preset:', data)
           callback(data)
         } else {
           console.error('Data not received from deeplink invocation', data)

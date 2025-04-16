@@ -1,8 +1,21 @@
-import { BrowserWindow, desktopCapturer, session, ipcMain } from 'electron'
+import { desktopCapturer, session, ipcMain } from 'electron'
+import { AppEvents } from './events'
+import { BrowserWindow } from 'electron/main'
 
-export default function handleMediaEvents(mainWindow: BrowserWindow) {
-  // Handle 'get-sources' IPC call to get available screen and window sources
-  ipcMain.handle('get-sources', async () => {
+interface Props {
+  studio: BrowserWindow
+}
+
+export default function ipcMediaEventHandlers({ studio }: Props) {
+  ipcMain.on(AppEvents.SEND_MEDIA_SOURCES, (_event, payload) => {
+    try {
+      studio.webContents.send(AppEvents.PROFILE_RECEIVED, payload)
+    } catch (error) {
+      console.log('failed to send profile')
+    }
+  })
+
+  ipcMain.handle(AppEvents.GET_SOURCES, async () => {
     try {
       const sources = await desktopCapturer.getSources({
         types: ['screen', 'window'],
@@ -21,10 +34,8 @@ export default function handleMediaEvents(mainWindow: BrowserWindow) {
     }
   })
 
-  // Handle the screen capture with system audio (loopback)
-  ipcMain.handle('get-screen-capture', async (_event, id: string) => {
+  ipcMain.handle(AppEvents.GET_SCREEN_CAPTURE, async (_event, id: string) => {
     try {
-      // Fetch screen and window sources
       const sources = await desktopCapturer.getSources({
         types: ['screen', 'window'],
         fetchWindowIcons: true
@@ -34,16 +45,14 @@ export default function handleMediaEvents(mainWindow: BrowserWindow) {
 
       if (!selectedSource) return null
 
-      // Use `setDisplayMediaRequestHandler` to request screen and audio capture
-      const mediaStream = await new Promise((resolve, reject) => {
+      const mediaStream = await new Promise((resolve) => {
         session.defaultSession.setDisplayMediaRequestHandler((_request, callback) => {
           callback({
             video: selectedSource,
-            audio: 'loopback' // Capture system audio
+            audio: 'loopback'
           })
         })
 
-        // Resolve the media stream once the handler completes
         resolve({
           video: selectedSource,
           audio: 'loopback'

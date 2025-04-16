@@ -4,6 +4,10 @@ import { SubscriptionPlan } from '../renderer/src/types/types'
 interface AuthApis {
   onAuthSuccess: (callback: (data: { refreshToken: string }) => void) => void
   onAuthFailure: (callback: ({ message: string }) => void) => void
+  getAccessToken: () => Promise<string>
+  getRefreshToken: () => Promise<string>
+  storeTokens: (accessToken?: string, refreshToken?: string) => void
+  clearTokens: () => void
 }
 
 interface WindowApis {
@@ -49,7 +53,7 @@ interface PresetSetCallbackProps {
   spaceId: string
 }
 interface Preset {
-  set: (callback: (data: PresetSetCallbackProps) => void) => () => void;
+  set: (callback: (data: PresetSetCallbackProps) => void) => () => void
 }
 
 interface ApiTypes {

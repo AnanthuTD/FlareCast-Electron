@@ -10,19 +10,15 @@ let rtmpUrl = import.meta.env.VITE_RTMP_URL
 let isLive = false
 let preset: { workspaceId: string; spaceId: string; folderId: string } | null = null
 
-const getAccessTokenFromCookie = async () => {
-  const cookies = document.cookie.split('; ')
-  const accessTokenCookie = cookies.find((cookie) => cookie.startsWith('accessToken='))
-  console.log(accessTokenCookie)
-  return accessTokenCookie ? accessTokenCookie.split('=')[1] : null
-  // return await window.electron.ipcRenderer.invoke('get-access-token')
+const getAccessToken = async () => {
+  return await window.api.auth.getAccessToken()
 }
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
   path: import.meta.env.VITE_SOCKET_URL_PATH,
   transports: ['websocket'],
   auth: {
-    token: await getAccessTokenFromCookie()
+    token: await getAccessToken()
   },
   withCredentials: true
 })

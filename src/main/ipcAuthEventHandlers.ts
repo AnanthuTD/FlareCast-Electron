@@ -1,12 +1,9 @@
 import fs from 'fs'
 import path from 'path'
-import { app, ipcMain, shell, safeStorage } from 'electron'
+import { app, ipcMain, safeStorage } from 'electron'
+import { AppEvents } from './events'
 
-export function handleRendererEvents() {
-  ipcMain.on('open:webpage', (_event, url) => {
-    shell.openExternal(url || 'https://example.com')
-  })
-
+export function ipcAuthEventHandlers() {
   const tokenFile = path.join(app.getPath('userData'), 'tokens.json')
 
   interface Tokens {
@@ -22,7 +19,7 @@ export function handleRendererEvents() {
   }
 
   // Store tokens
-  ipcMain.handle('store-tokens', async (event, tokens: Tokens) => {
+  ipcMain.handle(AppEvents.STORE_TOKENS, async (event, tokens: Tokens) => {
     ensureTokenFile()
     const encryptedAccess = safeStorage.encryptString(tokens.accessToken)
     const encryptedRefresh = safeStorage.encryptString(tokens.refreshToken)
@@ -33,7 +30,7 @@ export function handleRendererEvents() {
   })
 
   // Get access token
-  ipcMain.handle('get-access-token', async () => {
+  ipcMain.handle(AppEvents.GET_ACCESS_TOKEN, async () => {
     ensureTokenFile()
     const tokens = JSON.parse(fs.readFileSync(tokenFile, 'utf-8'))
     if (!tokens.access) return null
@@ -41,7 +38,7 @@ export function handleRendererEvents() {
   })
 
   // Get refresh token
-  ipcMain.handle('get-refresh-token', async () => {
+  ipcMain.handle(AppEvents.GET_REFRESH_TOKEN, async () => {
     ensureTokenFile()
     const tokens = JSON.parse(fs.readFileSync(tokenFile, 'utf-8'))
     if (!tokens.refresh) return null
@@ -49,7 +46,7 @@ export function handleRendererEvents() {
   })
 
   // Clear tokens
-  ipcMain.handle('clear-tokens', async () => {
+  ipcMain.handle(AppEvents.CLEAR_TOKENS, async () => {
     fs.writeFileSync(tokenFile, JSON.stringify({ access: '', refresh: '' }))
   })
 }
