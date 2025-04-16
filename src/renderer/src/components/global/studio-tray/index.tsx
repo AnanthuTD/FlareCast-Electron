@@ -14,8 +14,8 @@ import {
   TooltipProvider,
   TooltipTrigger
 } from '@renderer/components/ui/tooltip'
-import { canRecord, getStreamToken } from '@renderer/lib/services'
 import { toast } from 'sonner'
+import { canRecord, getStreamToken } from '@renderer/api/api'
 
 const StudioTray = () => {
   const [preview, setPreview] = useState(false)
@@ -29,6 +29,8 @@ const StudioTray = () => {
   const recordingStartTime = useRef<number | null>(null)
 
   useEffect(() => {
+    checkWebsocketConnection()
+
     const unsub = window.api.studio.onSourceReceived((profile: Sources) => {
       if (JSON.stringify(profile) === JSON.stringify(onSources)) return
       console.log('Received sources:', profile)

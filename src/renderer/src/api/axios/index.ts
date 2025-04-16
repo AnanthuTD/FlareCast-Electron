@@ -1,10 +1,8 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
-import Cookies from 'js-cookie'
-
-console.log(import.meta.env.DEV, import.meta.env.VITE_API_GATEWAY_URL)
+import { refreshAccessToken } from '../auth'
 
 const config: AxiosRequestConfig = {
-  baseURL: import.meta.env.DEV ? '/api' : import.meta.env.VITE_API_GATEWAY_URL,
+  baseURL: import.meta.env.DEV ? '/api' : import.meta.env.VITE_API_GATEWAY_URL + '/api',
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
@@ -13,7 +11,7 @@ const config: AxiosRequestConfig = {
   withCredentials: true
 }
 
-const axiosInstance: AxiosInstance = axios.create(config)
+export const axiosInstance: AxiosInstance = axios.create(config)
 export const publicAxiosInstance: AxiosInstance = axios.create(config)
 
 let isRefreshing = false
@@ -28,22 +26,9 @@ const addRefreshSubscriber = (callback: () => void) => {
   refreshSubscribers.push(callback)
 }
 
-// Add request interceptor to include accessToken
+// Request interceptor to add access token
 axiosInstance.interceptors.request.use(async (config) => {
   const accessToken = await window.electron.ipcRenderer.invoke('get-access-token')
-  const refreshToken = await window.electron.ipcRenderer.invoke('get-refresh-token')
-  console.log(accessToken, refreshToken)
-
-  // Set cookies via IPC
-  await window.electron.ipcRenderer.invoke('set-cookie', {
-    name: 'accessToken',
-    value: accessToken
-  })
-  await window.electron.ipcRenderer.invoke('set-cookie', {
-    name: 'refreshToken',
-    value: refreshToken
-  })
-
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`
     console.log('Setting Authorization header:', accessToken)
@@ -51,27 +36,16 @@ axiosInstance.interceptors.request.use(async (config) => {
   return config
 })
 
+// Public instance doesn’t need token by default, but can be added if required
 publicAxiosInstance.interceptors.request.use(async (config) => {
   const accessToken = await window.electron.ipcRenderer.invoke('get-access-token')
-  const refreshToken = await window.electron.ipcRenderer.invoke('get-refresh-token')
-  console.log(accessToken, refreshToken)
-
-  // Set cookies via IPC
-  await window.electron.ipcRenderer.invoke('set-cookie', {
-    name: 'accessToken',
-    value: accessToken
-  })
-  await window.electron.ipcRenderer.invoke('set-cookie', {
-    name: 'refreshToken',
-    value: refreshToken
-  })
-
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`
     console.log('Setting Authorization header:', accessToken)
   }
   return config
 })
+
 // Response interceptor for token refresh
 axiosInstance.interceptors.response.use(
   (response) => response,
@@ -91,33 +65,33 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const refreshToken = await window.electron.ipcRenderer.invoke('get-refresh-token')
-        if (!refreshToken) throw new Error('No refresh token available')
+        // const refreshToken = await window.electron.ipcRenderer.invoke('get-refresh-token')
+        // if (!refreshToken) throw new Error('No refresh token available')
 
-        const { data } = await publicAxiosInstance.post(`/user/api/auth/refresh-token`, {
-          refreshToken
-        })
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = data // Expect new tokens
+        const newTokens = await refreshAccessToken()
+        if (!newTokens) throw new Error('Refresh token invalid')
 
-        // Store new tokens
+        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = newTokens
+
+        // Store new tokens via IPC
         await window.electron.ipcRenderer.invoke('store-tokens', {
           accessToken: newAccessToken,
-          refreshToken: newRefreshToken || refreshToken // Use new refreshToken if provided, else keep old one
+          refreshToken: newRefreshToken
         })
 
         onTokenRefreshed()
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
+        return axiosInstance(originalRequest)
       } catch (refreshError) {
         console.log('🔴 Token refresh failed:', refreshError)
-        // await window.electron.ipcRenderer.invoke('clear-tokens')
+        await window.electron.ipcRenderer.invoke('clear-tokens')
         if (!['/signin', '/signup'].includes(window.location.pathname)) {
-          // window.location.href = '/signin'
+          window.location.href = '/signin'
         }
         return Promise.reject(refreshError)
       } finally {
         isRefreshing = false
       }
-
-      return axiosInstance(originalRequest)
     }
 
     return Promise.reject(error)

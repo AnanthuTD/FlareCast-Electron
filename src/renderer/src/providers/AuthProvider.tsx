@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { UserState, useUserStore } from '@renderer/stores/userStore'
 import SignIn from '@renderer/components/sign-in'
-import { checkAuthentication, postLogin } from '@renderer/lib/services'
+import { checkAuthentication, loginWithRefreshToken } from '@renderer/api/api'
 
 interface AuthContextType {
   errorMessage: string | null
@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           which will validate the refresh token and set the new one in the cookie for further requests and send back the 
           accessToken and user data
         */
-        const user = await postLogin(data.refreshToken)
+        const user = await loginWithRefreshToken(data.refreshToken)
 
         if (user) {
           console.log('User data:', user)

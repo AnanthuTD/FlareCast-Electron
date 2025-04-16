@@ -7,12 +7,9 @@ import linuxIcon from '../../resources/icons/png/512x512.png?asset'
 import { handleDeepLink } from './handleDeepLink'
 import { handleRendererEvents } from './handleRendererEvents'
 import handleMediaEvents from './handleMediaEvents'
-import ffmpeg from 'fluent-ffmpeg'
-import { Readable } from 'stream'
+import { setupRtmpStreaming } from './handlertmpStreamer'
 
 const PROTOCOL_NAME = 'flarecast'
-let ffmpegProcess: ffmpeg.FfmpegCommand | null = null
-let readableStream: Readable | null = null
 
 let mainWindow: BrowserWindow
 let studio: BrowserWindow
@@ -52,6 +49,8 @@ if (!gotTheLock) {
       app.on('browser-window-created', (_, window) => {
         optimizer.watchWindowShortcuts(window)
       })
+
+      setupRtmpStreaming()
 
       createWindow()
 
@@ -172,7 +171,7 @@ function createWindow(): void {
     floatingWebCam.loadFile(join(__dirname, '../renderer/webcam.html'))
   }
 
-  handleRendererEvents(mainWindow)
+  handleRendererEvents()
   handleMediaEvents(mainWindow)
 }
 
@@ -185,99 +184,6 @@ app.on('window-all-closed', () => {
 ipcMain.on('window:close', () => {
   if (process.platform !== 'darwin') {
     app.quit()
-  }
-})
-
-// Token storage handlers using electron-store and cookies
-ipcMain.handle('store-tokens', async (_event, { accessToken, refreshToken }) => {
-  store.set('accessToken', accessToken)
-  store.set('refreshToken', refreshToken)
-
-  const cookies = [
-    {
-      url: 'http://localhost',
-      name: 'accessToken',
-      value: accessToken,
-      path: '/',
-      secure: true,
-      sameSite: 'no_restriction'
-    },
-    {
-      url: 'http://localhost',
-      name: 'refreshToken',
-      value: refreshToken,
-      path: '/',
-      secure: true,
-      sameSite: 'no_restriction',
-      httpOnly: true
-    }
-  ]
-
-  try {
-    await Promise.all(cookies.map((cookie) => session.defaultSession.cookies.set(cookie)))
-    console.log('Stored tokens and set cookies:', { accessToken, refreshToken })
-  } catch (error) {
-    console.error('Error setting cookies:', error)
-  }
-
-  return 'Tokens stored and cookies set'
-})
-
-ipcMain.handle('get-access-token', async () => {
-  const token = store.get('accessToken')
-  console.log('Fetched accessToken:', token)
-  return token
-})
-
-ipcMain.handle('get-refresh-token', async () => {
-  const token = store.get('refreshToken')
-  console.log('Fetched refreshToken:', token)
-  return token
-})
-
-ipcMain.handle('clear-tokens', async () => {
-  store.delete('accessToken')
-  store.delete('refreshToken')
-  try {
-    await session.defaultSession.cookies.remove('http://localhost', 'accessToken')
-    await session.defaultSession.cookies.remove('http://localhost', 'refreshToken')
-    console.log('Tokens and cookies cleared')
-  } catch (error) {
-    console.error('Error clearing cookies:', error)
-  }
-  return 'Tokens and cookies cleared'
-})
-
-// New IPC handlers for manually getting and setting cookies
-ipcMain.handle('get-cookie', async (_event, { name }) => {
-  try {
-    const cookies = await session.defaultSession.cookies.get({ name, url: 'http://localhost' })
-    const cookie = cookies[0]?.value || null
-    console.log(`Fetched cookie ${name}:`, cookie)
-    return cookie
-  } catch (error) {
-    console.error(`Error fetching cookie ${name}:`, error)
-    return null
-  }
-})
-
-ipcMain.handle('set-cookie', async (_event, { name, value }) => {
-  const cookie = {
-    url: 'http://localhost',
-    name,
-    value,
-    path: '/',
-    secure: true, // Set to false for file:// or local dev
-    sameSite: 'no_restriction',
-    httpOnly: name === 'refreshToken' ? true : false
-  }
-  try {
-    await session.defaultSession.cookies.set(cookie)
-    console.log(`Set cookie ${name}:`, value)
-    return `Cookie ${name} set`
-  } catch (error) {
-    console.error(`Error setting cookie ${name}:`, error)
-    throw error
   }
 })
 
@@ -306,35 +212,6 @@ ipcMain.on('hide:plugin', (_event, payload) => {
 ipcMain.on('webcam:change', (_event, payload) => {
   console.log('webcam:change', payload)
   floatingWebCam.webContents.send('webcam:onChange', payload)
-})
-
-ipcMain.handle('start-rtmp-stream', async (_event, { rtmpUrl }) => {
-  if (ffmpegProcess) return 'Stream already running'
-  readableStream = new Readable({ read() {} })
-  ffmpegProcess = ffmpeg(readableStream)
-    .inputFormat('webm')
-    .inputOptions(['-re'])
-    .outputOptions(['-c:v', 'libx264', '-c:a', 'aac', '-f', 'flv'])
-    .output(rtmpUrl)
-    .on('start', () => console.log('RTMP streaming started to:', rtmpUrl))
-    .on('error', (err) => console.error('RTMP streaming error:', err))
-    .on('end', () => console.log('RTMP streaming ended'))
-    .run()
-  return 'RTMP stream started'
-})
-
-ipcMain.handle('send-video-chunk', async (_event, chunk: Uint8Array) => {
-  if (!readableStream) return 'Stream not initialized'
-  readableStream.push(Buffer.from(chunk))
-  return 'Chunk sent'
-})
-
-ipcMain.handle('stop-rtmp-stream', async () => {
-  if (!ffmpegProcess || !readableStream) return 'No stream running'
-  readableStream.push(null)
-  ffmpegProcess = null
-  readableStream = null
-  return 'RTMP stream stopped'
 })
 
 app.disableHardwareAcceleration()

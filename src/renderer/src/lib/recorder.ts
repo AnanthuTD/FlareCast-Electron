@@ -11,10 +11,11 @@ let isLive = false
 let preset: { workspaceId: string; spaceId: string; folderId: string } | null = null
 
 const getAccessTokenFromCookie = async () => {
-  // const cookies = document.cookie.split('; ')
-  // const accessTokenCookie = cookies.find((cookie) => cookie.startsWith('accessToken='))
-  // return accessTokenCookie ? accessTokenCookie.split('=')[1] : null
-  return await window.electron.ipcRenderer.invoke('get-access-token')
+  const cookies = document.cookie.split('; ')
+  const accessTokenCookie = cookies.find((cookie) => cookie.startsWith('accessToken='))
+  console.log(accessTokenCookie)
+  return accessTokenCookie ? accessTokenCookie.split('=')[1] : null
+  // return await window.electron.ipcRenderer.invoke('get-access-token')
 }
 
 const socket = io(import.meta.env.VITE_SOCKET_URL, {
@@ -24,6 +25,10 @@ const socket = io(import.meta.env.VITE_SOCKET_URL, {
     token: await getAccessTokenFromCookie()
   },
   withCredentials: true
+})
+
+socket.on('error', (error) => {
+  console.error('Socket error:', error)
 })
 
 socket.on('connect', () => {
