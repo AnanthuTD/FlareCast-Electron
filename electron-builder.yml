@@ -46,9 +46,6 @@ linux:
     - target: AppImage
       arch:
         - x64
-    - target: snap
-      arch:
-        - x64
 appImage:
   artifactName: ${name}-${version}.${ext}
 npmRebuild: false
