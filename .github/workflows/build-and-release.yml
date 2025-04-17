@@ -3,7 +3,7 @@ name: Build and Release Electron App
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
 
 jobs:
   release:
@@ -11,7 +11,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [windows-latest]
+        os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
       - name: Checkout code
@@ -31,28 +31,38 @@ jobs:
           envkey_VITE_SOCKET_URL_PATH: ${{ secrets.VITE_SOCKET_URL_PATH }}
           envkey_VITE_API_GATEWAY_URL: ${{ secrets.VITE_API_GATEWAY_URL }}
           envkey_VITE_RTMP_URL: ${{ secrets.VITE_RTMP_URL }}
-          directory: './'
-          file_name: '.env.production'
+          directory: "./"
+          file_name: ".env.production"
           fail_on_empty: true
           sort_keys: false
 
       - name: Install dependencies
         run: npm install
 
-      - name: Build app and Package Electron app
-        run: npm run build:win
+      - name: Build and Package Electron app
+        run: |
+          if [ "${{ matrix.os }}" = "windows-latest" ]; then
+            npm run build:win
+          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
+            npm run build:mac
+          elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            npm run build:linux
+          fi
 
       - name: Create release and upload artifacts to GitHub
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/flarecast-*-setup.exe
-            dist/flarecast *.msi 
+            dist/flarecast*.msi
             dist/flarecast.*.msi
             dist/latest.yml
             dist/*.blockmap
             dist/*.dmg
             dist/*.AppImage
             dist/*.deb
+            dist/*.rpm
+            dist/latest-linux.yml
+            dist/latest-mac.yml
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
