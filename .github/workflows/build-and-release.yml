@@ -22,6 +22,10 @@ jobs:
         with:
           node-version: 20
 
+      - name: Install snapcraft on Linux
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo snap install snapcraft --classic
+
       - name: Create .env.production file
         uses: SpicyPizza/create-envfile@v2.0
         with:
@@ -43,11 +47,12 @@ jobs:
         run: |
           if [ "${{ matrix.os }}" = "windows-latest" ]; then
             npm run build:win
-          elif [ "${{ matrix.os }}" = "macos-latest" ]; then
-            npm run build:mac
           elif [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
             npm run build:linux
           fi
+        env:
+          # Required for Snap Store publishing, if enabled
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
 
       - name: Create release and upload artifacts to GitHub
         uses: softprops/action-gh-release@v2
@@ -62,6 +67,7 @@ jobs:
             dist/*.AppImage
             dist/*.deb
             dist/*.rpm
+            dist/*.snap
             dist/latest-linux.yml
             dist/latest-mac.yml
         env:
