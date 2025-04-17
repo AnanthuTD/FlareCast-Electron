@@ -33,7 +33,7 @@ jobs:
           envkey_VITE_RTMP_URL: ${{ secrets.VITE_RTMP_URL }}
           directory: './'
           file_name: '.env.production'
-          fail_on_empty: true # Fail the workflow if any env var is missing
+          fail_on_empty: true
           sort_keys: false
 
       - name: Install dependencies
@@ -42,7 +42,7 @@ jobs:
       - name: Build app and Package Electron app
         run: npm run build:win
 
-      - name: Create release and upload artifacts
+      - name: Create release and upload artifacts to GitHub
         uses: softprops/action-gh-release@v2
         with:
           files: |
