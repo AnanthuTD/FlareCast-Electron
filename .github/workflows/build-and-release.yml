@@ -22,9 +22,12 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install snapcraft on Linux
+      - name: Install Linux dependencies
         if: matrix.os == 'ubuntu-latest'
-        run: sudo snap install snapcraft --classic
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y rpm
+          sudo snap install snapcraft --classic
 
       - name: Create .env.production file
         uses: SpicyPizza/create-envfile@v2.0
@@ -51,7 +54,6 @@ jobs:
             npm run build:linux
           fi
         env:
-          # Required for Snap Store publishing, if enabled
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
 
       - name: Create release and upload artifacts to GitHub
@@ -63,12 +65,10 @@ jobs:
             dist/flarecast.*.msi
             dist/latest.yml
             dist/*.blockmap
-            dist/*.dmg
             dist/*.AppImage
             dist/*.deb
             dist/*.rpm
             dist/*.snap
             dist/latest-linux.yml
-            dist/latest-mac.yml
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_GITHUB }}
