@@ -21,8 +21,8 @@ export function ipcAuthEventHandlers() {
   // Store tokens
   ipcMain.handle(AppEvents.STORE_TOKENS, async (event, tokens: Tokens) => {
     ensureTokenFile()
-    const encryptedAccess = safeStorage.encryptString(tokens.accessToken)
-    const encryptedRefresh = safeStorage.encryptString(tokens.refreshToken)
+    const encryptedAccess = safeStorage.encryptString(tokens.accessToken ?? '')
+    const encryptedRefresh = safeStorage.encryptString(tokens.refreshToken ?? '')
     fs.writeFileSync(
       tokenFile,
       JSON.stringify({ access: encryptedAccess, refresh: encryptedRefresh })
@@ -34,7 +34,9 @@ export function ipcAuthEventHandlers() {
     ensureTokenFile()
     const tokens = JSON.parse(fs.readFileSync(tokenFile, 'utf-8'))
     if (!tokens.access) return null
-    return safeStorage.decryptString(Buffer.from(tokens.access))
+    const accessToken = safeStorage.decryptString(Buffer.from(tokens.access))
+    console.log('accessToken: ', accessToken)
+    return accessToken
   })
 
   // Get refresh token
@@ -42,7 +44,9 @@ export function ipcAuthEventHandlers() {
     ensureTokenFile()
     const tokens = JSON.parse(fs.readFileSync(tokenFile, 'utf-8'))
     if (!tokens.refresh) return null
-    return safeStorage.decryptString(Buffer.from(tokens.refresh))
+    const refreshToken = safeStorage.decryptString(Buffer.from(tokens.refresh))
+    console.log('refreshToken: ', refreshToken)
+    return refreshToken
   })
 
   // Clear tokens

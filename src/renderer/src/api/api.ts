@@ -24,10 +24,7 @@ export async function loginWithRefreshToken(refreshToken: string) {
   const result = await postLogin(refreshToken)
   if (!result) return null
   const { user, accessToken, refreshToken: newRefreshToken } = result
-  await window.electron.ipcRenderer.invoke('store-tokens', {
-    accessToken,
-    refreshToken: newRefreshToken
-  })
+  window.api.auth.storeTokens(accessToken, newRefreshToken)
   return user
 }
 
@@ -52,6 +49,6 @@ export async function checkAuthentication() {
 }
 
 export async function logout() {
-  await window.electron.ipcRenderer.invoke('clear-tokens')
+  window.api.auth.clearTokens()
   window.location.href = '/signin'
 }
