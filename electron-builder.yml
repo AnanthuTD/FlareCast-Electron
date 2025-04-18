@@ -28,6 +28,8 @@ nsis:
   createDesktopShortcut: always
   createStartMenuShortcut: true
   installerIcon: resources/icons/win/icon.ico
+msi:
+  artifactName: ${name}-${version}.${ext}
 mac:
   icon: resources/icons/mac/icon.icns
   entitlementsInherit: resources/entitlements.mac.plist

@@ -71,6 +71,7 @@ jobs:
           files: |
             dist/flarecast-*-setup.exe
             dist/flarecast *.msi
+            dist/flarecast-*.msi
             dist/flarecast.*.msi
             dist/latest.yml
             dist/*.blockmap
