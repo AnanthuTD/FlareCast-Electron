@@ -57,12 +57,21 @@ jobs:
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT_TOKEN }}
 
+      - name: List generated files
+        shell: bash
+        run: |
+          echo "Listing all files in dist directory:"
+          find dist -type f -ls || echo "No files found in dist"
+          echo "Listing all files in current directory:"
+          ls -la
+          
       - name: Create release and upload artifacts to GitHub
         uses: softprops/action-gh-release@v2
         with:
           files: |
             dist/flarecast-*-setup.exe
-            dist/flarecast*.msi
+            dist/flarecast *.msi
+            dist/flarecast-*.msi
             dist/flarecast.*.msi
             dist/latest.yml
             dist/*.blockmap

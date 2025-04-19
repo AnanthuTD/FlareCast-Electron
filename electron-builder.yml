@@ -16,6 +16,9 @@ win:
     - target: nsis
       arch:
         - x64
+    - target: msi
+      arch:
+        - x64
   icon: resources/icons/win/icon.ico
   executableName: flarecast
 nsis:
@@ -25,6 +28,8 @@ nsis:
   createDesktopShortcut: always
   createStartMenuShortcut: true
   installerIcon: resources/icons/win/icon.ico
+msi:
+  artifactName: ${name}-${version}.${ext}
 mac:
   icon: resources/icons/mac/icon.icns
   entitlementsInherit: resources/entitlements.mac.plist
@@ -44,9 +49,6 @@ linux:
     exec: flarecast %u
   target:
     - target: AppImage
-      arch:
-        - x64
-    - target: snap
       arch:
         - x64
 appImage:
