@@ -30,9 +30,10 @@ export interface User {
   email: string
   firstName: string | null
   lastName: string | null
-  createdAt: Date
-  plan: SubscriptionPlan | null
-  studio: Studio | null
+  // createdAt: Date
+  // plan: SubscriptionPlan | null
+  // studio: Studio | null
+  image: string | null
 }
 
 export interface Profile {

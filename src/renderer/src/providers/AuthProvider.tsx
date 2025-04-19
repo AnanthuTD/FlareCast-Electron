@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { UserState, useUserStore } from '@renderer/stores/userStore'
+import { useUserStore } from '@renderer/stores/userStore'
 import SignIn from '@renderer/components/sign-in'
-import { checkAuthentication, loginWithRefreshToken } from '@renderer/api/api'
+import { checkAuthentication } from '@renderer/api/api'
+import { toast } from 'sonner'
 
 interface AuthContextType {
   errorMessage: string | null
@@ -11,38 +12,25 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const setUser = useUserStore((state) => state.setUser)
+  const logout = useUserStore((state) => state.logout)
   const userId = useUserStore((state) => state.id)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const handleAuthError = (error: any) => {
-    console.error('Authentication error:', error)
-    setErrorMessage('Failed to authenticate user')
-  }
-
   useEffect(() => {
     window.api.auth.onAuthSuccess(async (data) => {
-      try {
-        /* 
-          On initial authentication use the refresh token received from the deep link to send a post-login request
-          which will validate the refresh token and set the new one in the cookie for further requests and send back the 
-          accessToken and user data
-        */
-        const user = await loginWithRefreshToken(data.refreshToken)
-
-        if (user) {
-          console.log('User data:', user)
-          setUser(user as UserState)
-        }
-
-        setErrorMessage(null)
-      } catch (error) {
-        handleAuthError(error)
+      if (data.user) {
+        setUser(data.user)
+      } else {
+        toast.error('No user data received on auth success')
+        setErrorMessage('No user data received on auth success')
       }
     })
 
     window.api.auth.onAuthFailure((data) => {
+      console.log('Auth failed with message: ', data.message)
       setErrorMessage(data.message)
+      logout()
     })
   }, [])
 
@@ -53,9 +41,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (data.user) {
           setUser(data.user)
+          window.api.studio.hidePluginWindow(false)
         }
       } catch (error) {
         console.error('Error checking authentication:', error)
+        window.api.studio.hidePluginWindow(true)
+        logout()
       } finally {
         setIsLoading(false)
       }

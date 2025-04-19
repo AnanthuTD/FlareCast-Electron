@@ -1,13 +1,16 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
-import { SubscriptionPlan } from '../renderer/src/types/types'
+import { SubscriptionPlan, User } from '../renderer/src/types/types'
 
 interface AuthApis {
-  onAuthSuccess: (callback: (data: { refreshToken: string }) => void) => void
+  onAuthSuccess: (callback: (data: { user: User }) => void) => void
   onAuthFailure: (callback: ({ message: string }) => void) => void
   getAccessToken: () => Promise<string>
   getRefreshToken: () => Promise<string>
   storeTokens: (accessToken?: string, refreshToken?: string) => void
   clearTokens: () => void
+  handleUnauthorized: () => Promise<boolean>
+  handleAuthorized: () => Promise<boolean>
+  handleLogout: () => Promise<boolean>
 }
 
 interface WindowApis {

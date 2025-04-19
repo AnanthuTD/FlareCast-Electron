@@ -10,6 +10,9 @@ export enum AppEvents {
   GET_REFRESH_TOKEN = 'get:refresh:token',
   STORE_TOKENS = 'store:tokens',
   CLEAR_TOKENS = 'clear:tokens',
+  HANDLE_UNAUTHORIZED = 'handle:unauthorized',
+  HANDLE_AUTHORIZED = 'handle:authorized',
+  HANDLE_LOGOUT = 'handle:logout',
 
   SET_PRESET = 'set:preset',
 

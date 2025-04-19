@@ -1,5 +1,6 @@
 import { BrowserWindow } from 'electron'
 import { AppEvents } from './events'
+import { loginWithRefreshToken } from './auth'
 
 export function handleDeepLink(mainWindow: BrowserWindow, studio: BrowserWindow, url: URL): void {
   console.log(url)
@@ -8,9 +9,7 @@ export function handleDeepLink(mainWindow: BrowserWindow, studio: BrowserWindow,
   console.log('================================')
   switch (url.pathname) {
     case '/auth/success':
-      mainWindow.webContents.send(AppEvents.AUTHENTICATION_SUCCESS, {
-        refreshToken: url.searchParams.get('refreshToken')
-      })
+      loginWithRefreshToken(url.searchParams.get('refreshToken')!, mainWindow)
       break
     case '/auth/failure':
       mainWindow.webContents.send(AppEvents.AUTHENTICATION_FAILURE, {

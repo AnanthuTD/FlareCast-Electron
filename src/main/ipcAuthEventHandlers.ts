@@ -1,9 +1,17 @@
 import fs from 'fs'
 import path from 'path'
 import { app, ipcMain, safeStorage } from 'electron'
+import { BrowserWindow } from 'electron/main'
 import { AppEvents } from './events'
+import { handleLogout, handleTokenRefresh } from './handleTokenRefresh'
 
-export function ipcAuthEventHandlers() {
+interface Props {
+  studioWindow: BrowserWindow
+  mainWindow: BrowserWindow
+  webcamWindow: BrowserWindow
+}
+
+export function ipcAuthEventHandlers({ mainWindow, studioWindow, webcamWindow }: Props) {
   const tokenFile = path.join(app.getPath('userData'), 'tokens.json')
 
   interface Tokens {
@@ -52,5 +60,46 @@ export function ipcAuthEventHandlers() {
   // Clear tokens
   ipcMain.handle(AppEvents.CLEAR_TOKENS, async () => {
     fs.writeFileSync(tokenFile, JSON.stringify({ access: '', refresh: '' }))
+  })
+
+  ipcMain.handle(AppEvents.HANDLE_UNAUTHORIZED, async (_event, payload) => {
+    console.log('Handling unauthorized!')
+    try {
+      await handleTokenRefresh()
+      return true
+    } catch (error) {
+      console.error('🔴 Error: ', error)
+
+      // Only hide windows to reuse later
+      if (studioWindow && !studioWindow.isDestroyed()) studioWindow.hide()
+      if (webcamWindow && !webcamWindow.isDestroyed()) webcamWindow.hide()
+
+      ipcMain.emit(AppEvents.AUTHENTICATION_FAILURE, { message: 'Failed to refresh token!' })
+      return false
+    }
+  })
+
+  ipcMain.handle(AppEvents.HANDLE_AUTHORIZED, (_event, payload) => {
+    // Recreate windows if destroyed
+    if (!studioWindow || studioWindow.isDestroyed()) {
+      studioWindow = new BrowserWindow({ show: false /* options */ })
+    }
+    if (!webcamWindow || webcamWindow.isDestroyed()) {
+      webcamWindow = new BrowserWindow({ show: false /* options */ })
+    }
+    // Show windows
+    studioWindow.show()
+    webcamWindow.show()
+    // Update renderer state instead of reloading
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.reload()
+    }
+  })
+
+  ipcMain.handle(AppEvents.HANDLE_LOGOUT, () => {
+    handleLogout()
+    if (studioWindow && !studioWindow.isDestroyed()) studioWindow.hide()
+    if (webcamWindow && !webcamWindow.isDestroyed()) webcamWindow.hide()
+    mainWindow.webContents.send(AppEvents.AUTHENTICATION_FAILURE, { message: 'Logged out' })
   })
 }

@@ -1,12 +1,14 @@
 import { ipcRenderer } from 'electron'
 import { AppEvents } from '../main/events'
 import { PresetSetCallbackProps } from '../types/types'
+import { User } from '../renderer/src/types/types'
 
 const api = {
   auth: {
-    onAuthSuccess: (callback: (data: { refreshToken: string }) => void) => {
-      const listener = (_event: Electron.IpcRendererEvent, data: { refreshToken: string }) => {
-        if (data && typeof data.refreshToken === 'string') {
+    onAuthSuccess: (callback: (data: { user: User }) => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, data: { user: User }) => {
+        console.log('Auth success event received')
+        if (data) {
           callback(data)
         } else {
           console.error('Invalid data received for AUTHENTICATION_SUCCESS:', data)
@@ -18,6 +20,7 @@ const api = {
 
     onAuthFailure: (callback: (data: { message: string }) => void) => {
       const listener = (_event: Electron.IpcRendererEvent, data: { message: string }) => {
+        console.info('Auth failure event received')
         if (data && typeof data.message === 'string') {
           callback(data)
         } else {
@@ -29,6 +32,7 @@ const api = {
     },
 
     getAccessToken: async () => {
+      console.log('Getting access token')
       const accessToken = await ipcRenderer.invoke(AppEvents.GET_ACCESS_TOKEN)
       return accessToken as string
     },
@@ -44,6 +48,18 @@ const api = {
 
     clearTokens: () => {
       ipcRenderer.invoke(AppEvents.CLEAR_TOKENS)
+    },
+
+    handleUnauthorized: async (): Promise<boolean> => {
+      return await ipcRenderer.invoke(AppEvents.HANDLE_UNAUTHORIZED)
+    },
+
+    handleAuthorized: async (): Promise<boolean> => {
+      return await ipcRenderer.invoke(AppEvents.HANDLE_AUTHORIZED)
+    },
+
+    handleLogout: async (): Promise<boolean> => {
+      return await ipcRenderer.invoke(AppEvents.HANDLE_LOGOUT)
     }
   },
   window: {

@@ -15,8 +15,7 @@ const PROTOCOL_NAME = 'flarecast'
 
 let mainWindow: BrowserWindow
 let studioWindow: BrowserWindow
-let floatingWebCamWindow: BrowserWindow
-let store // Declare store for electron-store
+let webcamWindow: BrowserWindow
 
 if (process.defaultApp) {
   if (process.argv.length >= 2) {
@@ -42,10 +41,6 @@ if (!gotTheLock) {
 
   app.whenReady().then(async () => {
     try {
-      // Dynamically import electron-store to handle ESM in CommonJS
-      const { default: Store } = await import('electron-store')
-      store = new Store()
-
       electronApp.setAppUserModelId('com.electron')
 
       app.on('browser-window-created', (_, window) => {
@@ -122,7 +117,7 @@ function createWindow(): void {
 
   if (is.dev) studioWindow.webContents.openDevTools()
 
-  floatingWebCamWindow = new BrowserWindow({
+  webcamWindow = new BrowserWindow({
     width: 200,
     height: 200,
     minHeight: 100,
@@ -144,11 +139,11 @@ function createWindow(): void {
 
   mainWindow.visibleOnAllWorkspaces = true
   studioWindow.visibleOnAllWorkspaces = true
-  floatingWebCamWindow.visibleOnAllWorkspaces = true
+  webcamWindow.visibleOnAllWorkspaces = true
 
   mainWindow.setAlwaysOnTop(true, 'screen-saver', 1)
   studioWindow.setAlwaysOnTop(true, 'screen-saver', 1)
-  floatingWebCamWindow.setAlwaysOnTop(true, 'screen-saver', 1)
+  webcamWindow.setAlwaysOnTop(true, 'screen-saver', 1)
 
   mainWindow.on('ready-to-show', () => {
     mainWindow.show()
@@ -166,16 +161,16 @@ function createWindow(): void {
   if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
     mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
     studioWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/studio.html`)
-    floatingWebCamWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/webcam.html`)
+    webcamWindow.loadURL(`${process.env['ELECTRON_RENDERER_URL']}/webcam.html`)
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
     studioWindow.loadFile(join(__dirname, '../renderer/studio.html'))
-    floatingWebCamWindow.loadFile(join(__dirname, '../renderer/webcam.html'))
+    webcamWindow.loadFile(join(__dirname, '../renderer/webcam.html'))
   }
 
-  ipcAuthEventHandlers()
+  ipcAuthEventHandlers({ mainWindow, studioWindow, webcamWindow })
   ipcMediaEventHandlers({ studio: studioWindow })
-  ipcEventHandlers({ floatingWebCam: floatingWebCamWindow, mainWindow, studio: studioWindow })
+  ipcEventHandlers({ floatingWebCam: webcamWindow, mainWindow, studio: studioWindow })
 }
 
 app.on('window-all-closed', () => {

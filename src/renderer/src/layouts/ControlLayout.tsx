@@ -8,7 +8,6 @@ import {
 import { X } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { useUserStore } from '@renderer/stores/userStore'
-import { logout } from '@renderer/api/api'
 import { toast } from 'sonner'
 
 interface Props {
@@ -18,8 +17,8 @@ interface Props {
 export default function ControlLayout({ children }: Props) {
   const user = useUserStore((state) => state)
 
-  const handleLogout = () => {
-    logout()
+  const handleLogout = async () => {
+    await window.api.auth.handleLogout()
     toast.info('Logged out')
   }
 

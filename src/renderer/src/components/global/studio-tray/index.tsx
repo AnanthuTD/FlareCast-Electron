@@ -93,8 +93,9 @@ const StudioTray = () => {
     let streamKey = ''
 
     if (!isLive) {
-      const socketConnected = checkWebsocketConnection()
+      const socketConnected = await checkWebsocketConnection()
       if (!socketConnected) {
+        toast.error('Unauthorized, please signin again!')
         console.log('WebSocket connection not established')
         // setTimeout(() => checkWebsocketConnection(), 5000)
         return

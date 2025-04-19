@@ -1,6 +1,6 @@
-import { User } from '../types/types'
-import { apiRequest } from './api'
-import { publicAxiosInstance } from './axios/index'
+import { apiRequest } from '../renderer/src/api/api'
+import { publicAxiosInstance, storeTokens } from './handleTokenRefresh'
+import { AppEvents } from './events'
 
 interface TokenResponse {
   accessToken: string
@@ -8,7 +8,16 @@ interface TokenResponse {
 }
 
 interface LoginResponse extends TokenResponse {
-  user: User
+  user: any
+}
+
+export async function loginWithRefreshToken(refreshToken: string, mainWindow) {
+  const result = await postLogin(refreshToken)
+  if (!result) return null
+  const { user, accessToken, refreshToken: newRefreshToken } = result
+  mainWindow.webContents.send(AppEvents.AUTHENTICATION_SUCCESS, { user })
+  storeTokens({ access: accessToken, refresh: newRefreshToken })
+  return user
 }
 
 // Login with refresh token
@@ -32,6 +41,8 @@ export async function refreshAccessToken(refreshToken?: string): Promise<TokenRe
     console.error('Token refresh failed:', result.error)
     return null
   }
+
+  console.log('Refresh success: ', result.data)
   return result.data // { accessToken, refreshToken }
 }
 

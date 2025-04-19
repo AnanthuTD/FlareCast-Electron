@@ -9,19 +9,47 @@ let userId: string
 let rtmpUrl = import.meta.env.VITE_RTMP_URL
 let isLive = false
 let preset: { workspaceId: string; spaceId: string; folderId: string } | null = null
+let refreshTryCount = 0
 
 const getAccessToken = async () => {
   return await window.api.auth.getAccessToken()
 }
 
-const socket = io(import.meta.env.VITE_SOCKET_URL, {
-  path: import.meta.env.VITE_SOCKET_URL_PATH,
-  transports: ['websocket'],
-  auth: {
-    token: await getAccessToken()
-  },
-  withCredentials: true
-})
+async function connectToWebsocket() {
+  const newSocket = io(import.meta.env.VITE_SOCKET_URL, {
+    path: import.meta.env.VITE_SOCKET_URL_PATH,
+    transports: ['websocket'],
+    auth: {
+      token: await getAccessToken()
+    },
+    withCredentials: true
+  })
+
+  newSocket.on('connect_error', async (err) => {
+    // alert('Connection error! ' + refreshTryCount)
+
+    // if (refreshTryCount !== 0) {
+    //   console.error('Already tried to refresh one time!')
+    //   window.api.studio.hidePluginWindow(true)
+    //   return
+    // }
+
+    console.log(err instanceof Error)
+    console.log(err.message)
+    refreshTryCount++
+    try {
+      const isRefreshed = await window.api.auth.handleUnauthorized()
+      if (!isRefreshed) throw new Error('Failed to refresh token')
+      refreshTryCount = 0
+    } catch (e) {
+      console.error(e)
+    }
+  })
+
+  return newSocket
+}
+
+let socket = await connectToWebsocket()
 
 socket.on('error', (error) => {
   console.error('Socket error:', error)
@@ -31,19 +59,26 @@ socket.on('connect', () => {
   console.log('Connected to socket: ' + socket.id)
 })
 
-export const checkWebsocketConnection = () => {
-  socket.connect()
-  if (!socket.connected) {
-    try {
-      return true
-    } catch (err) {
-      console.error('Error connecting to websocket', err)
-      return false
-    }
-  } else {
+export const checkWebsocketConnection = async () => {
+  console.log('Socket status: ', socket.connected)
+
+  if (socket.connected) {
     console.log('App is Connected to socket initially: ' + socket.id)
+    return true
   }
-  return true
+
+  try {
+    socket = await connectToWebsocket()
+    if (socket.connected) {
+      console.log('is connected: ', socket.connected)
+      return true
+    }
+    console.log('Connecting to socket failed!')
+    return false
+  } catch (err) {
+    console.error('Error connecting to websocket', err)
+    return false
+  }
 }
 
 export const startRecording = async (

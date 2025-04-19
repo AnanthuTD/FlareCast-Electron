@@ -13,8 +13,6 @@ export function ipcEventHandlers({ studio, mainWindow, floatingWebCam }: Props) 
     shell.openExternal(url || 'https://example.com')
   })
 
-  
-
   ipcMain.on(AppEvents.RESIZE_STUDIO, (_event, payload) => {
     if (payload.shrink) {
       studio.setBounds({ width: 300, height: 100 })
@@ -24,8 +22,11 @@ export function ipcEventHandlers({ studio, mainWindow, floatingWebCam }: Props) 
   })
 
   ipcMain.on(AppEvents.HIDE_STUDIO_WINDOW, (_event, payload) => {
-    console.log(payload)
-    mainWindow.webContents.send(AppEvents.HIDE_STUDIO_WINDOW, payload)
+    if (payload.state === true) {
+      studio.hide()
+    } else {
+      studio.show()
+    }
   })
 
   ipcMain.on(AppEvents.WEBCAM_CHANGE, (_event, payload) => {

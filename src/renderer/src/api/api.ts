@@ -1,6 +1,5 @@
 import axiosInstance from './axios/index'
 import { AxiosResponse } from 'axios'
-import { postLogin } from './auth'
 
 export interface ApiResponse<T> {
   data: T | null
@@ -17,15 +16,6 @@ export async function apiRequest<T>(request: Promise<AxiosResponse<T>>): Promise
     console.error('API request failed:', errorMessage)
     return { data: null, error: errorMessage }
   }
-}
-
-// Updated postLogin to return full response
-export async function loginWithRefreshToken(refreshToken: string) {
-  const result = await postLogin(refreshToken)
-  if (!result) return null
-  const { user, accessToken, refreshToken: newRefreshToken } = result
-  window.api.auth.storeTokens(accessToken, newRefreshToken)
-  return user
 }
 
 export async function canRecord(): Promise<boolean> {
@@ -46,9 +36,4 @@ export async function getStreamToken(props?: {
 export async function checkAuthentication() {
   const { data } = await axiosInstance.get(`/users/profile`)
   return data
-}
-
-export async function logout() {
-  window.api.auth.clearTokens()
-  window.location.href = '/signin'
 }

@@ -1,5 +1,4 @@
 import axios, { AxiosInstance, AxiosRequestConfig } from 'axios'
-import { refreshAccessToken } from '../auth'
 
 const config: AxiosRequestConfig = {
   baseURL: import.meta.env.DEV ? '/api' : import.meta.env.VITE_API_GATEWAY_URL + '/api',
@@ -65,18 +64,12 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true
 
       try {
-        const refreshToken = await window.api.auth.getRefreshToken()
-        if (!refreshToken) throw new Error('No refresh token available')
-
-        const newTokens = await refreshAccessToken(refreshToken)
-        if (!newTokens) throw new Error('Refresh token invalid')
-
-        const { accessToken: newAccessToken, refreshToken: newRefreshToken } = newTokens
-
-        // Store new tokens via IPC
-        window.api.auth.storeTokens(newAccessToken, newRefreshToken)
+        const isRefreshed = await window.api.auth.handleUnauthorized()
+        if (!isRefreshed) throw new Error('Failed to refresh token')
 
         onTokenRefreshed()
+
+        const newAccessToken = await window.api.auth.getAccessToken()
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
         return axiosInstance(originalRequest)
       } catch (refreshError) {
