@@ -94,6 +94,7 @@ const api = {
   },
   webcam: {
     open: () => ipcRenderer.send(AppEvents.OPEN_WEBCAM),
+    hide: () => ipcRenderer.send(AppEvents.HIDE_WEBCAM),
     onWebcamChange: (callback) => {
       const listener = (_event: Electron.IpcRendererEvent, webcam) => {
         callback(webcam)
@@ -102,7 +103,7 @@ const api = {
       return () => ipcRenderer.removeListener(AppEvents.WEBCAM_ON_CHANGE, listener)
     },
     changeWebcam: (webcamId) => {
-      if (webcamId) ipcRenderer.send(AppEvents.WEBCAM_CHANGE, webcamId)
+      ipcRenderer.send(AppEvents.WEBCAM_CHANGE, webcamId)
     }
   },
   liveStream: {

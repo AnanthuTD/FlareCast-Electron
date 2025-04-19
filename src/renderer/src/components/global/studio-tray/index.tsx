@@ -57,6 +57,11 @@ const StudioTray = () => {
 
   useEffect(() => {
     if (!onSources || !videoElement.current) return
+    if (!onSources.screen) {
+      toast.info('No screen selected! select a screen to start recording')
+      videoElement.current.srcObject = null
+      return
+    }
     selectSources(onSources, videoElement).catch((err) =>
       console.error('Failed to select sources:', err)
     )

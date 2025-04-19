@@ -32,4 +32,12 @@ export function ipcEventHandlers({ studio, mainWindow, floatingWebCam }: Props) 
   ipcMain.on(AppEvents.WEBCAM_CHANGE, (_event, payload) => {
     floatingWebCam.webContents.send(AppEvents.WEBCAM_ON_CHANGE, payload)
   })
+
+  ipcMain.handle(AppEvents.HIDE_WEBCAM, () => {
+    floatingWebCam.hide()
+  })
+
+  ipcMain.handle(AppEvents.OPEN_WEBCAM, () => {
+    floatingWebCam.show()
+  })
 }

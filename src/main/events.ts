@@ -28,9 +28,10 @@ export enum AppEvents {
   RESIZE_STUDIO = 'resize:studio',
 
   // WEBCAM
-  OPEN_WEBCAM = 'open:webcam',
+  OPEN_WEBCAM = 'webcam:open',
   WEBCAM_ON_CHANGE = 'webcam:on:change',
   WEBCAM_CHANGE = 'webcam:change',
+  HIDE_WEBCAM = 'webcam:hide',
 
   // RTMP (live stream)
   START_STREAM = 'start:rtmp:stream',

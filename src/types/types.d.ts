@@ -40,6 +40,7 @@ interface StudioApis {
 
 interface WebcamApis {
   open: () => void
+  hide: () => void
   changeWebcam: (webcamId: string | undefined) => void
   onWebcamChange: (callback: (webcamId: string) => void) => () => Electron.IpcRenderer
 }

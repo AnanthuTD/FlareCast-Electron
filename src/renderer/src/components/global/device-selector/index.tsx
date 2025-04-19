@@ -22,24 +22,20 @@ function DeviceSelector() {
   const [selectedMic, setSelectedMic] = useState<MediaDeviceInfo | null>(null)
   const [selectedCam, setSelectedCam] = useState<MediaDeviceInfo | null>(null)
 
-  /*   useEffect(() => {
+  useEffect(() => {
     const fetchMediaSources = async () => {
       try {
         const mediaSources = await getMediaSources()
         setScreenOptions(mediaSources.screens || [])
         setMicOptions(mediaSources.audioInputs || [])
         setCameraOptions(mediaSources.videoInputs || [])
-
-        setSelectedScreen(mediaSources.screens?.[0] || null)
-        setSelectedMic(mediaSources.audioInputs?.[0] || null)
-        setSelectedCam(mediaSources.videoInputs?.[0] || null)
       } catch (error) {
         console.error('Error fetching media sources:', error)
       }
     }
 
     fetchMediaSources()
-  }, []) */
+  }, [])
 
   const fetchScreens = async () => {
     try {
@@ -75,16 +71,17 @@ function DeviceSelector() {
 
   useEffect(() => {
     window.api.media.sendMediaSources({
-      screen: selectedScreen?.deviceId,
-      audio: selectedMic?.deviceId,
+      screen: selectedScreen?.deviceId ?? null,
+      audio: selectedMic?.deviceId ?? null,
       id: userId
     })
   }, [selectedMic, selectedScreen])
 
   useEffect(() => {
-    if (!selectedCam) return
-    window.api.webcam.open()
-    window.api.webcam.changeWebcam(selectedCam?.deviceId)
+    if (selectedCam) {
+      window.api.webcam.open()
+    }
+    window.api.webcam.changeWebcam(selectedCam?.deviceId ?? null)
   }, [selectedCam])
 
   const NoScreenOption = {
@@ -111,10 +108,8 @@ function DeviceSelector() {
     label: screenOptions.length > 0 ? 'Select Screen' : 'No Screen',
     onSelect: (deviceId) => {
       const selected = screenOptions.find((screen) => screen.deviceId === deviceId)
-      if (selected) {
-        setSelectedScreen(selected)
-        console.log('Selected screen device:', selected)
-      }
+      setSelectedScreen(selected ?? null)
+      console.log('Selected screen device:', selected)
     },
     options: [
       NoScreenOption,
@@ -136,10 +131,8 @@ function DeviceSelector() {
     label: cameraOptions.length > 0 ? 'Select Camera' : 'No Camera',
     onSelect: (deviceId) => {
       const selected = cameraOptions.find((camera) => camera.deviceId === deviceId)
-      if (selected) {
-        setSelectedCam(selected)
-        console.log('Selected camera device:', selected)
-      }
+      setSelectedCam(selected ?? null)
+      console.log('Selected camera device:', selected)
     },
     options: [
       NoCamOption,
@@ -159,10 +152,8 @@ function DeviceSelector() {
     label: micOptions.length > 0 ? 'Select Microphone' : 'No Microphone',
     onSelect: (deviceId) => {
       const selected = micOptions.find((mic) => mic.deviceId === deviceId)
-      if (selected) {
-        setSelectedMic(selected)
-        console.log('Selected microphone device:', selected)
-      }
+      setSelectedMic(selected ?? null)
+      console.log('Selected microphone device:', selected)
     },
     options: [
       NoMicOption,

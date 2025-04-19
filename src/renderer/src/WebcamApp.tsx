@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { ThemeProvider } from './providers/theme-provider'
+import { toast } from 'sonner'
 
 const WebcamApp: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement | null>(null)
@@ -9,7 +10,9 @@ const WebcamApp: React.FC = () => {
     const handleWebcamChange = async (deviceId: string) => {
       try {
         if (!deviceId) {
+          toast.warning('No cam selected')
           setShowLayout(false)
+          window.api.webcam.hide()
           return
         }
 
