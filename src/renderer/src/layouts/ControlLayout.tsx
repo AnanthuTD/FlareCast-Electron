@@ -8,6 +8,8 @@ import {
 import { X } from 'lucide-react'
 import { Button } from '@renderer/components/ui/button'
 import { useUserStore } from '@renderer/stores/userStore'
+import { logout } from '@renderer/api/api'
+import { toast } from 'sonner'
 
 interface Props {
   children: React.ReactNode
@@ -17,18 +19,17 @@ export default function ControlLayout({ children }: Props) {
   const user = useUserStore((state) => state)
 
   const handleLogout = () => {
-    console.log('Logout clicked') // Add your logout logic here
+    logout()
+    toast.info('Logged out')
   }
 
   const handleOpenWebpage = () => {
-    window.api.window.openWebpage('https://example.com')
+    window.api.window.openWebpage(import.meta.env.VITE_WEBSITE_LIBRARY_URL)
   }
 
   const handleCloseWindow = () => {
     window.api.window.close()
   }
-
-  // console.log(user)
 
   return (
     <div>
