@@ -9,6 +9,7 @@ const api = {
       const listener = (_event: Electron.IpcRendererEvent, data: { user: User }) => {
         console.log('Auth success event received')
         if (data) {
+          ipcRenderer.invoke(AppEvents.HANDLE_AUTHORIZED)
           callback(data)
         } else {
           console.error('Invalid data received for AUTHENTICATION_SUCCESS:', data)

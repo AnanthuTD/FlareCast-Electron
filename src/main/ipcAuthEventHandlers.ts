@@ -82,18 +82,14 @@ export function ipcAuthEventHandlers({ mainWindow, studioWindow, webcamWindow }:
   ipcMain.handle(AppEvents.HANDLE_AUTHORIZED, (_event, payload) => {
     // Recreate windows if destroyed
     if (!studioWindow || studioWindow.isDestroyed()) {
-      studioWindow = new BrowserWindow({ show: false /* options */ })
+      console.error('No studio window present!')
     }
     if (!webcamWindow || webcamWindow.isDestroyed()) {
-      webcamWindow = new BrowserWindow({ show: false /* options */ })
+      console.error('No studio window present!')
     }
     // Show windows
     studioWindow.show()
     webcamWindow.show()
-    // Update renderer state instead of reloading
-    if (mainWindow && !mainWindow.isDestroyed()) {
-      mainWindow.reload()
-    }
   })
 
   ipcMain.handle(AppEvents.HANDLE_LOGOUT, () => {

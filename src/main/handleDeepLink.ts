@@ -7,6 +7,7 @@ export function handleDeepLink(mainWindow: BrowserWindow, studio: BrowserWindow,
   console.log('================================')
   console.log('handleDeepLink invoked with url:', url, '\n', url.pathname)
   console.log('================================')
+
   switch (url.pathname) {
     case '/auth/success':
       loginWithRefreshToken(url.searchParams.get('refreshToken')!, mainWindow)
