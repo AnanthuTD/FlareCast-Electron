@@ -6,7 +6,7 @@ import macIcon from '../../resources/icons/mac/icon.icns?asset'
 import linuxIcon from '../../resources/icons/png/512x512.png?asset'
 import { handleDeepLink } from './handleDeepLink'
 import { ipcAuthEventHandlers } from './ipcAuthEventHandlers'
-import { setupRtmpStreaming } from './handlertmpStreamer'
+import { handleRtmpStream } from './handlertmpStreamer'
 import { AppEvents } from './events'
 import { ipcEventHandlers } from './ipcEventHandlers'
 import ipcMediaEventHandlers from './ipcMediaEventHandlers'
@@ -46,8 +46,6 @@ if (!gotTheLock) {
       app.on('browser-window-created', (_, window) => {
         optimizer.watchWindowShortcuts(window)
       })
-
-      setupRtmpStreaming()
 
       createWindow()
 
@@ -171,6 +169,7 @@ function createWindow(): void {
   ipcAuthEventHandlers({ mainWindow, studioWindow, webcamWindow })
   ipcMediaEventHandlers({ studio: studioWindow })
   ipcEventHandlers({ floatingWebCam: webcamWindow, mainWindow, studio: studioWindow })
+  handleRtmpStream()
 }
 
 app.on('window-all-closed', () => {
