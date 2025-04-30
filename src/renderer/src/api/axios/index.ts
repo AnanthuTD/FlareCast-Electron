@@ -76,7 +76,7 @@ axiosInstance.interceptors.response.use(
         console.log('🔴 Token refresh failed:', refreshError)
         await window.api.auth.clearTokens()
         if (!['/signin', '/signup'].includes(window.location.pathname)) {
-          window.location.href = '/signin'
+          window.api.auth.handleLogout()
         }
         return Promise.reject(refreshError)
       } finally {
