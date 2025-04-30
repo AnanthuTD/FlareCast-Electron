@@ -95,7 +95,7 @@ export const startRecording = async (
   if (!mediaRecorder) return
   isLive = isLiveParams
 
-  window.api.studio.hidePluginWindow(true)
+  // window.api.studio.hidePluginWindow(true)
   videoTransferFileName = `${uuid()}-${onSources.id.slice(0, 8)}.webm`
 
   if (isLive) {
@@ -168,7 +168,7 @@ export const saveVideo = () => {
 export const stopRecording = () => {
   if (!isStopped || !mediaRecorder || isLive) return
 
-  window.api.studio.hidePluginWindow(false)
+  // window.api.studio.hidePluginWindow(false)
   socket.emit('process:video', {
     fileName: videoTransferFileName,
     userId,

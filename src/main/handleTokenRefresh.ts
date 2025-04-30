@@ -16,6 +16,8 @@ const config: AxiosRequestConfig = {
 
 export const publicAxiosInstance: AxiosInstance = axios.create(config)
 
+const tokenFile = path.join(app.getPath('userData'), 'tokens.json')
+
 // Get access token
 const getAccessToken = async () => {
   ensureTokenFile()
@@ -35,7 +37,6 @@ publicAxiosInstance.interceptors.request.use(async (config) => {
   return config
 })
 
-const tokenFile = path.join(app.getPath('userData'), 'tokens.json')
 
 export const ensureTokenFile = () => {
   if (!fs.existsSync(tokenFile)) {
@@ -69,7 +70,10 @@ export async function handleTokenRefresh() {
   if (!refreshToken) throw new Error('No refresh token available')
 
   const newTokens = await refreshAccessToken(refreshToken)
-  if (!newTokens) throw new Error('Refresh token invalid')
+  if (!newTokens) {
+    storeTokens({ access: '', refresh: '' })
+    throw new Error('Refresh token invalid')
+  }
 
   const { accessToken: newAccessToken, refreshToken: newRefreshToken } = newTokens
 
